@@ -1,0 +1,17 @@
+{% set suppress_info = grid_layout and page_count > 1 %}
+
+<!-- Info page if any -->
+
+{% if info and not suppress_info %}
+
+<div align="left" style="color:black;">
+  <a name="content"></a>
+  <h2>{{info.basename}}</h2>
+
+<pre>
+{{info_content|safe}}
+</pre>
+</div>
+<hr>
+
+{% endif %}

@@ -1,0 +1,47 @@
+<!-- Row range links -->
+
+{% set rows = params['rows'] %}
+{% set skip = params['skip'] %}
+
+&nbsp;&nbsp;
+
+{% if row_range_links[0] %}
+  <a href="{{row_range_links[0]}}"><span class="tip"><img src="/icons-local/black/larrb-30x20.png"/><span class="tiptext">
+  Show first {{rows}} items (1 to {{rows}})</span></span></a>
+{% else %}
+  <img src="/icons-local/gray/larrb-30x20.png"/>
+{% endif %}
+
+&nbsp;&nbsp;
+
+{% if row_range_links[1] %}
+  {% set row1 = ([1, skip - rows + 1]|sort)[-1] %}
+  <a href="{{row_range_links[1]}}"><span class="tip"><img src="/icons-local/black/larr-30x20.png"/><span class="tiptext">
+  Show previous {{rows}} items ({{row1}} to {{row1 + rows - 1}})</span></span></a>
+{% else %}
+  <img src="/icons-local/gray/larr-30x20.png"/>
+{% endif %}
+
+&nbsp;&nbsp;
+
+<span style="vertical-align:top;margin-top:2px;display:inline-block">Showing items {{skip + 1}} to {{skip + rows}} of {{total_rows}}</span>
+
+&nbsp;&nbsp;
+
+{% if row_range_links[2] %}
+  {% set row1 = ([skip + rows + 1, total_rows - rows + 1]|sort)[0] %}
+  <a href="{{row_range_links[2]}}"><span class="tip"><img src="/icons-local/black/rarr-30x20.png"/><span class="tiptext">
+  Show next {{rows}} items ({{row1}} to {{row1 + rows - 1}})</span></span></a>
+{% else %}
+  <img src="/icons-local/gray/rarrb-30x20.png"/>
+{% endif %}
+
+&nbsp;&nbsp;
+
+{% if row_range_links[3] %}
+  <a href="{{row_range_links[3]}}"><span class="tip"><img src="/icons-local/black/rarrb-30x20.png"/><span class="tiptext">
+  Show last {{rows}} items ({{total_rows - rows + 1}} to {{total_rows}})</span></span></a>
+{% else %}
+  <img src="/icons-local/gray/rarrb-30x20.png"/>
+{% endif %}
+

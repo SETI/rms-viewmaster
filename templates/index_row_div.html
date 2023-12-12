@@ -1,0 +1,44 @@
+{% set SHADES = ["ffffff", "eeeeee"] %}
+
+<!-- Begin index row div -->
+
+<div align="center">
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse;">
+
+{% set table_no = 0 %}
+{% set table = tables[0] %}
+{% include "level_navigation.html" %}
+
+{% for page_no in range(sections|length) %}
+  {% set page = sections[page_no] %}
+
+  <!-- Header for first table only -->
+
+  {% if page_no == 0 %}
+
+    <!-- Navigation through neighbors -->
+    {% include "neighbor_navigation.html" %}
+
+  {% endif %}
+
+  <!-- Table rows, grouped -->
+
+  {% for line_no in range(page|length) %}
+    {% set shade = SHADES[line_no % 2] %}
+    <tr bgcolor="{{shade}}">
+      <td align="left" style="padding:0; font-family:monospace;">{{page[line_no]|safe}}</td>
+    </tr>
+  {% endfor %}
+
+  {% if page_no < sections|length - 1 %}
+    <tr bgcolor="ffffff">
+      <td>
+        <hr size="2"/>
+      </td>
+    </tr>
+  {% endif %}
+
+{% endfor %}
+
+</table>
+</div>

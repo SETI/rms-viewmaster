@@ -1,0 +1,42 @@
+<!-- Navigation through hierarchy, within table -->
+{% if not query.is_category_dir %}
+  <tr bgcolor="#e2edf5" class="border_bottom">
+    {% if table_no == 0 or table_no >= page_count or not params['continuous']
+       or not continuous_view_allowed %}
+
+      <td colspan="7" align="left" valign="center">
+        <a name="{{(table.parent_pdsf.global_anchor)|safe}}"></a>
+        {% if table_no < page_count %}
+          <a name="page{{(table_no+1)|string|safe}}"></a>
+          {% if page_count > 1 %}
+            Directory {{(table_no+1)}}:
+          {% endif %}
+        {% endif %}
+
+        {% for level_no in range(table.levels|length-1,-1,-1) %}
+          {% set level = table.levels[level_no] %}
+            {% if level.nav_link %}
+              <a href="{{level.nav_link}}"><span class="tip">
+            {% endif %}
+
+            {% if level.isdir %}
+              {% set slash = '/' %}
+            {% else %}
+              {% set slash = '' %}
+            {% endif %}
+
+            {% if level.nav_link %}
+              {{level.basename}}<span class="tiptext" id="slow">Go to this directory in Viewmaster</span></span></a>{{slash}}
+            {% else %}
+              {{level.basename}}{{slash}}
+            {% endif %}
+        {% endfor %}
+      </td>
+
+      <td align="right">
+        <span style="font-size:small;">[<a href="#top"><span class="tip">Top<span class="tiptextleft">
+          Jump to the top of this page</span></span></a>]</span>
+      </td>
+    {% endif %}
+  </tr>
+{% endif %}

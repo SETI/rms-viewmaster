@@ -1,0 +1,27 @@
+{% if query.childnames %}
+
+  <div align="left">
+    <hr/>
+    <span style="color:black;font-size="medium;">
+    <p><b>View individual rows:</b></p>
+    </span>
+
+    <span style="color:black;font-size="small;">
+    {% if query.childnames|length > 210 %}
+      {% for childname in query.childnames[:100] %}
+        <a href="{{viewmaster_|safe}}{{query.logical_path|safe}}/{{childname}}">{{childname}}</a>
+      {% endfor %}
+      <p>...</p>
+      {% for childname in query.childnames[-100:] %}
+        <a href="{{viewmaster_|safe}}{{query.logical_path|safe}}/{{childname}}">{{childname}}</a>
+      {% endfor %}
+    {% else %}
+      {% for childname in query.childnames %}
+        <a href="{{viewmaster_|safe}}{{query.logical_path|safe}}/{{childname}}">{{childname}}</a>
+      {% endfor %}
+    {% endif %}
+
+    </span>
+  </div>
+
+{% endif %}

@@ -1,0 +1,759 @@
+{% set suppress_assoc = grid_layout and page_count > 1 %}
+{% set suppress_info  = grid_layout and page_count > 1 %}
+{% set suppress_options = query.is_category_dir %}
+{% set filterable = (query.category_ == 'volumes/') or
+                    (query.category_ == 'calibrated/') or
+                    (query.category_ == 'diagrams/') or
+                    (query.category_ == 'previews/') %}
+{% set suppress_view_options = query.is_index_row or not filterable or query.is_volset or query.is_category_dir %}
+{% set suppress_filename_filter = query.is_index_row or not filterable or query.is_volset or query.is_category_dir %}
+{% set suppress_versions = query.is_index_row %}
+
+{% set HEADER_VIEWSIZE = 400 %}
+{% set HEADER_ICONSIZE = 200 %}
+{% set TREE_ICONSIZE = 50 %}
+{% set LEVELS_MIN_WIDTH = '460px' %}
+{% set FILTER_BOX = 10 %}
+{% set ORDINALS = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'] %}
+{% set TAB = "&nbsp;&nbsp;&nbsp;&nbsp;" %}
+
+<style>
+tr.border_bottom td {
+   border-top:1pt solid black; border-bottom:1pt solid black;
+}
+
+em {
+  font-size: 30px;
+  font-style: normal;
+  font-weight: bold;
+  color: black;
+}
+
+pre {
+  font-size: medium;
+  font-family: monospace;
+  display: block;
+  margin: 1em 0;
+  color: black;
+}
+
+img {
+  padding: 1px;
+}
+
+/* unvisited link */
+a:link {
+  color: #547b99;
+  border-bottom: 0px;
+  text-decoration: none;
+}
+
+/* visited link */
+a:visited {
+  color: #72a7cf;
+  border-bottom: 0px;
+  text-decoration: none;
+}
+
+/* mouse over link */
+a:hover {
+  color: #0a151e;
+  border-bottom: 1px solid;
+  text-decoration: none;
+}
+
+a.imagelink:hover {
+  display: inline-block;
+  background-color: #e4eef6;
+  border-bottom: 0px;
+  padding: 0px;
+  outline: 1px solid #547b99;
+}
+
+/* selected link */
+a:active {
+  color: #316790;
+  border-bottom: 0px;
+  text-decoration: none;
+}
+
+.tip {
+  position: relative;
+  display: inline-block;
+}
+
+.tiptext {
+  visibility: hidden;
+  width: 160px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  font-size: small;
+  border-radius: 6px;
+  padding: 5px 5px;
+  position: absolute;
+  z-index: 1;
+  top: calc(100% + 6pt);
+  left: calc(100% + 14pt);
+  margin-left: -40px;
+  opacity: 0;
+  transition: opacity 0.05s;
+  transition-delay: 1s;
+}
+
+.tiptext::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 10%;
+  margin-left: -8px;
+  border-width: 8px;
+  border-style: solid;
+  border-color: transparent transparent #555 transparent;
+  opacity: 1;
+}
+
+.tiptextleft {
+  visibility: hidden;
+  width: 180px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  font-size: small;
+  border-radius: 6px;
+  padding: 5px 12px;
+  position: absolute;
+  z-index: 1;
+  top: calc(100% + 6pt);
+  left: 50%;
+  margin-left: -175px;
+  opacity: 0;
+  transition: opacity 0.05s;
+  transition-delay: 1s;
+}
+
+.tiptextleft::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 85%;
+  margin-left: -8px;
+  border-width: 8px;
+  border-style: solid;
+  border-color: transparent transparent #555 transparent;
+  opacity: 1;
+}
+
+.tip:hover .tiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+.tip:hover .tiptextleft {
+  visibility: visible;
+  opacity: 1;
+}
+
+#slow {
+  transition-delay: 2s;
+}
+
+input {
+  font-size: small;
+  box-sizing: border-box;
+  border: 1px solid #c8daea;
+  padding: 3px;
+  border-radius: 4px;
+  outline: none;
+}
+input[type=text]:focus {
+  background-color: #edf3f8;
+}
+input[type=submit], input[type=reset] {
+  background-color: #dae7f1;
+  padding: 3px;
+}
+input[type=submit]:hover, input[type=reset]:hover {
+  background-color: #b6cee2;
+}
+select {
+  background-color: #edf3f8;
+}
+
+</style>
+
+<a name="top"></a>
+
+<!-- Product View -->
+
+<div align="left">
+
+<!-- Header -->
+
+{% set CATEGORY_KEYS = [
+  ['volumes', 'calibrated', 'previews', 'diagrams', 'metadata', 'documents'],
+  ['archives-volumes', 'archives-calibrated', 'archives-previews', 'archives-diagrams', 'archives-metadata'],
+  ['previous', 'next', 'latest']] %}
+{% set CATEGORY_TOOLTIPS = [
+  ['View data volumes as delivered to the PDS',
+   'View collections of data calibrated by the RMS Node',
+   'View collections of browse products created by the RMS Node',
+   'View collections of observation diagrams created by the RMS Node',
+   'View collections of index tables and other metadata curated by the RMS Node',
+   'View collections of documentation curated by the RMS Node'],
+  ['Downloadable archives of entire volumes',
+   'Downloadable archives of entire RMS calibrated data collections',
+   'Downloadable archives of entire RMS preview collections',
+   'Downloadable archives of entire RMS diagram collections',
+   'Downloadable archives of entire RMS metadata collections']] %}
+{% set CATEGORY_TOOLTIPS_ASSOCIATED = [
+  ['View associated data products as delivered to the PDS',
+   'View associated data products calibrated by the RMS Node',
+   'View associated browse products created by the RMS Node',
+   'View associated observation diagrams created by the RMS Node',
+   'View associated index tables and other metadata created by the RMS Node',
+   'View associated documentation curated by the RMS Node'],
+  ['Downloadable archives of entire volumes',
+   'Downloadable archives of entire RMS calibrated data',
+   'Downloadable archives of entire RMS preview collections',
+   'Downloadable archives of entire RMS diagram collections',
+   'Downloadable archives of entire RMS metadata collections'],
+  ['Prior version of these products',
+   'Subsequent version of these products',
+   'Most recent version of these products']] %}
+{% set CATEGORY_LABELS = [
+  ['Volumes', 'Calibrated', 'Previews', 'Diagrams', 'Metadata', 'Documents'],
+  ['Volumes', 'Calibrated', 'Previews', 'Diagrams', 'Metadata'],
+  ['Previous', 'Next', 'Latest']] %}
+
+<em><a href="{{home}}"><span class="tip">RMS<span class="tiptext" style="font-weight:normal;">
+    PDS Ring-Moon Systems Node home page</span></span></a>
+<a href="{{viewmaster_}}"><span class="tip">Viewmaster<span class="tiptext" style="font-weight:normal;">
+    Viewmaster home</span></span></a>
+</em>
+&nbsp;&nbsp;&nbsp<img src="/icons-local/blue/png-30/document_volume.png"/>
+{% for k in range(CATEGORY_KEYS[0]|length) %}
+  {% if k %}
+    |
+  {% endif %}
+  {% if query.logical_path == CATEGORY_KEYS[0][k] %}
+    <b>{{CATEGORY_LABELS[0][k]}}</b>
+  {% else %}
+    <a href="{{viewmaster_|safe}}{{CATEGORY_KEYS[0][k]}}"><span class="tip">{{CATEGORY_LABELS[0][k]}}<span class="tiptext">
+      {{CATEGORY_TOOLTIPS[0][k]}}</span></span></a>
+  {% endif %}
+{% endfor %}
+
+&nbsp;&nbsp;&nbsp<img src="/icons-local/blue/png-30/document_archive.png"/>
+{% for k in range(CATEGORY_KEYS[1]|length) %}
+  {% if k %}
+    |
+  {% endif %}
+  {% if query.logical_path == CATEGORY_KEYS[1][k] %}
+    <b>{{CATEGORY_LABELS[1][k]}}</b>
+  {% else %}
+    <a href="{{viewmaster_|safe}}{{CATEGORY_KEYS[1][k]}}"><span class="tip">{{CATEGORY_LABELS[1][k]}}<span class="tiptext">
+      {{CATEGORY_TOOLTIPS[1][k]}}</span></span></a>
+  {% endif %}
+{% endfor %}
+
+<hr/>
+
+<div align="left">
+
+{% if selected_viewset and not grid_layout %}
+  {% set viewset = selected_viewset %}
+  {% set view = viewset.for_frame(HEADER_VIEWSIZE) %}
+  <img src="{{localhost|safe}}{{view.url|safe}}"
+       alt="{{view.alt}}"
+       width="{{view.width}}"
+       height="{{view.height}}" align="right">
+{% elif query.is_category_dir %}
+  <!-- suppress top-level icon -->
+{% else %}
+  {% set view = query.iconset_open.for_frame(HEADER_ICONSIZE) %}
+  <img src="{{localhost|safe}}{{view.url|safe}}"
+       alt="{{view.alt}}"
+       width="{{view.width}}"
+       height="{{view.height}}" align="right">
+{% endif %}
+
+<!-- File Hierarchy -->
+
+<table border="0" cellpadding="0" cellspacing="0">
+
+{% set table = tables[0] %}
+{% if query.isdir %}
+  {% set levels = table.levels %}
+{% else %}
+  {% set levels = table.levels_plus_one %}
+{% endif %}
+
+{% for level_no in range(levels|length-1,-1,-1) %}
+  {% set indent = levels|length-1 - level_no %}
+  {% set level = levels[level_no] %}
+  {% set icon = level.iconset_open.for_width(TREE_ICONSIZE) %}
+  {% if level.isdir %}
+    {% set tooltip = 'Go to this directory in Viewmaster' %}
+    {% set slash = '/' %}
+  {% else %}
+    {% set tooltip = 'View details about this product in Viewmaster' %}
+    {% set slash = '' %}
+  {% endif %}
+  <tr>
+    <td align="left" style="min-width:{{LEVELS_MIN_WIDTH|safe}}">
+      {{indent * TAB|safe}}
+      {% if level.nav_link and level.logical_path != query.logical_path %}
+        <a href="{{level.nav_link}}" class="imagelink"><span class="tip"><img
+          src="{{localhost|safe}}{{icon.url|safe}}"
+          alt="{{icon.alt}}"
+          width="{{icon.width}}"
+          height="{{icon.height}}"><span class="tiptext" id="slow">{{tooltip}}</span></span></a>
+        <a href="{{level.nav_link}}"><span class="tip">{{level.basename}}<span class="tiptext" id="slow">
+            {{tooltip}}</span></span></a>{{slash}}
+      {% else %}
+        <img src="{{localhost|safe}}{{icon.url|safe}}"
+             alt="{{icon.alt}}"
+             width="{{icon.width}}"
+             height="{{icon.height}}">
+        {{level.basename}}{{slash}}
+      {% endif %}
+      {% if level.exact_archive_url or level.exact_checksum_url %}
+        &nbsp;&nbsp;&nbsp;
+      {% endif %}
+      {% if level.exact_archive_url %}
+        <span style="font-size:small">
+          [<a href="{{localhost|safe}}{{level.exact_archive_url|safe}}"
+              target="_blank"><span class="tip">tar.gz<span class="tiptext">
+                Download a compressed tar file of this directory tree</span></span></a>]
+        </span>
+      {% endif %}
+      {% if level.exact_checksum_url %}
+        <span style="font-size:small">
+          [<a href="{{localhost|safe}}{{level.exact_checksum_url|safe}}"
+              target="_blank"><span class="tip">MD5.txt<span class="tiptext">
+                View MD5 checksums for this directory tree</span></span></a>]
+        </span>
+      {% endif %}
+    </td>
+    <td align="left" valign="bottom" style="padding-left:8px;">
+        {{level.description|safe}}
+        {% if level.volname and not level.interior %}
+          {% if level.version_rank < 990000 %}
+            [<span style="color:red;">{{level.version_message}}</span>]
+          {% endif %}
+        {% elif level.volset and not level.volname and level_no == 0 %}
+          {% if level.version_rank < 990000 %}
+            [<span style="color:red;">{{level.version_message}}</span>]
+          {% endif %}
+        {% endif %}
+        {% if level_no == 0 and page_count > 2 %}
+          (directory 1)
+        {% endif %}
+    </td>
+  </tr>
+{% endfor %}
+
+{% if query.isdir %}
+  {% for table_no in range(1,page_count) %}
+    {% set table = tables[table_no] %}
+    {% set prev_table = tables[table_no-1] %}
+    {% if table.levels[1:] != prev_table.levels[1:] %}
+      <tr>
+        <td align="left" colspan="2" style="width:{{LEVELS_MIN_WIDTH|safe}}">
+          &nbsp;
+        </td>
+      </tr>
+
+      {% set level3 = table.levels|length > 3 and
+            (table.levels[3].basename != prev_table.levels[3].basename) %}
+      {% set level2 = table.levels|length > 2 and
+            (table.levels[2].basename != prev_table.levels[2].basename) %}
+      {% set level1 = table.levels|length > 1 and
+            (table.levels[1].basename != prev_table.levels[1].basename) %}
+
+      {% set level2 = level2 or level3 %}
+      {% set level1 = level1 or level2 %}
+
+      {% if level3 %}
+        <tr>
+          <td align="left" colspan="2" style="width:{{LEVELS_MIN_WIDTH|safe}}">
+            {% set indent = table.levels|length-4 %}
+            {{indent * TAB|safe}}
+
+            <img src="{{localhost|safe}}icons-local/transparent_1x1.png"
+                 alt="spacer" width="{{TREE_ICONSIZE}}" height="1">
+
+            {% set nav_link = table.levels[3].nav_link %}
+            <a href="{{nav_link|safe}}"><span class="tip">{{table.levels[3].basename}}<span class="tiptext" id="slow">
+                Go to this directory in Viewmaster</span></span></a>/
+          </td>
+        </tr>
+      {% endif %}
+
+      {% if level2 %}
+        <tr>
+          <td align="left" colspan="2" style="width:{{LEVELS_MIN_WIDTH|safe}}">
+            {% set indent = table.levels|length-3 %}
+            {{indent * TAB|safe}}
+
+            <img src="{{localhost|safe}}icons-local/transparent_1x1.png"
+                 alt="spacer" width="{{TREE_ICONSIZE}}" height="1">
+
+            {% set nav_link = table.levels[2].nav_link %}
+            <a href="{{nav_link|safe}}"><span class="tip">{{table.levels[2].basename}}<span class="tiptext" id="slow">
+                Go to this directory in Viewmaster</span></span></a>/
+          </td>
+        </tr>
+      {% endif %}
+
+      {% if level1 %}
+        <tr>
+          <td align="left" colspan="2" style="width:{{LEVELS_MIN_WIDTH|safe}}">
+            {% set indent = table.levels|length-2 %}
+            {{indent * TAB|safe}}
+
+            <img src="{{localhost|safe}}icons-local/transparent_1x1.png"
+                 alt="spacer" width="{{TREE_ICONSIZE}}" height="1">
+
+            {% set nav_link = table.levels[1].nav_link %}
+            <a href="{{nav_link|safe}}"><span class="tip">{{table.levels[1].basename}}<span class="tiptext" id="slow">
+                Go to this directory in Viewmaster</span></span></a>/
+          </td>
+        </tr>
+      {% endif %}
+    {% endif %}
+
+    <tr style="padding-left:8px;">
+      {% set level = table.levels[0] %}
+      <td align="left" colspan="1" style="width:{{LEVELS_MIN_WIDTH|safe}}">
+        {% set indent = table.levels|length-1 %}
+        {{indent * TAB|safe}}
+
+        <img src="{{localhost|safe}}icons-local/transparent_1x1.png"
+             alt="spacer" width="{{TREE_ICONSIZE}}" height="1">
+
+        {% if level.nav_link %}
+          <a href="{{level.nav_link|safe}}"><span class="tip">{{level.basename}}<span class="tiptext" id="slow">
+            Go to this directory in Viewmaster</span></span></a>/
+        {% else %}
+          {{level.basename}}/
+        {% endif %}
+      </td>
+      <td align="left" valign="bottom" style="padding-left:8px;">
+        (directory {{table_no+1}})
+      </td>
+    </tr>
+  {% endfor %}
+{% endif %}
+</span>
+</table>
+</div>
+
+<!-- Version History -->
+
+{% if query.version_ranks and not suppress_versions %}
+<hr/>
+<div>
+
+  <p>Volume history:
+  <ul>
+    {% set version_ranks = query.version_ranks[::-1] %}
+    {% for version_rank in version_ranks %}
+      {% if version_rank in query.all_version_abspaths %}
+        <li>
+          {% set parallel = parallels[version_rank] %}
+          {% set use_bold = (query.version_rank == version_rank) %}
+
+          {% if use_bold %}
+            <b>
+          {% endif %}
+
+          {% if parallel and not use_bold %}
+            <a href="{{viewmaster_|safe}}{{parallel.logical_path}}"><span class="tip">
+            {% set end_href = '<span class="tiptext">View this version in Viewmaster</span></span></a>' %}
+          {% else %}
+            {% set end_href = '' %}
+          {% endif %}
+
+          {% if query.volname %}
+            {{parallel.version_message}}{{end_href|safe}}
+          {% elif not query.volname and version_rank == version_ranks[0] %}
+            Current versions{{end_href|safe}}
+          {% else %}
+            {{parallel.version_message}}{{end_href|safe}}
+          {% endif %}
+
+          {% if use_bold %}
+            </b>
+          {% endif %}
+
+          {% if query.volname %}
+            [released {{parallel.volume_publication_date}}]
+          {% elif not query.volname %}
+            [latest release {{parallel.volume_publication_date}}]
+          {% endif %}
+        </li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+  </p>
+</div>
+{% endif %}
+
+<!-- Navigation -->
+
+{% if not suppress_options %}
+<hr/>
+<div style="font-size:small;">
+
+  <p><b>Jump in this page to</b>: [
+  <a href="#top"><span class="tip">Top<span class="tiptext">Jump to the top of this page</span></span></a> |
+  {% if params['continuous'] %}
+    <span style="color:silver;">
+  {% endif %}
+  Directory
+  {% for p in range(1,max_pages+1) %}
+    {% if p > page_count or params['continuous'] %}
+      <span style="color:silver;">{{p}}</span> |
+    {% else %}
+      <a href="#page{{p}}"><span class="tip">{{p}}<span class="tiptext">
+        Jump in this page to the beginning of the {{ORDINALS[p-1]}} directory, {{tables[p-1].parent_pdsf.basename}}</span></span></a> |
+    {% endif %}
+  {% endfor %}
+  {% if params['continuous'] %}
+    </span>
+  {% endif %}
+
+  {% if associations and not suppress_assoc %}
+    <a href="#related"><span class="tip">Related files<span class="tiptext">Jump in this page to information about related files</span></span></a> |
+  {% else %}
+    <span style="color:silver;">Related files</span> |
+  {% endif %}
+
+  {% if documents and not suppress_assoc %}
+    <a href="#documents"><span class="tip">Documentation<span class="tiptext">Jump in this page to important documentation</span></span></a> |
+  {% else %}
+    <span style="color:silver;">Documentation</span> |
+  {% endif %}
+
+  {% if info and not suppress_info %}
+    {% if query.isdir %}
+      <a href="#content"><span class="tip">Directory info<span class="tiptext">
+    {% elif info.islabel %}
+      <a href="#content"><span class="tip">Product label<span class="tiptext">
+    {% else %}
+      <a href="#content"><span class="tip">File content<span class="tiptext">
+    {% endif %}
+    Jump in this page to the content of {{info.basename}}</span></span></a>
+  {% else %}
+    <span style="color:silver;">
+    {% if query.isdir %}
+      Directory info
+    {% elif info.label %}
+     Product label
+    {% else %}
+      File content
+    {% endif %}
+    </span>
+  {% endif %}
+  ]
+  </p>
+
+  <!-- Root Directory -->
+
+  <p><b>This directory in</b>:
+  {% set category_headers = ['', '', '&nbsp;&nbsp;Versions:'] %}
+  {% set display_header = [true, false, true] %}
+
+  {% for header_no in range(category_headers|length) %}
+    {% if display_header[header_no] %}
+
+      <b>{{category_headers[header_no]|safe}}</b> [
+      {% for category_no in range(CATEGORY_LABELS[header_no]|length) %}
+        {% set pdsf = parallels[CATEGORY_KEYS[header_no][category_no]] %}
+        {% if pdsf or header_no == 2 %}
+          {% if category_no > 0 %}
+            |
+          {% endif %}
+
+          {% if not pdsf %}
+            <span style="color:silver;">{{CATEGORY_LABELS[header_no][category_no]}}</span>
+          {% elif (pdsf.logical_path == query.logical_path) %}
+            <b>{{CATEGORY_LABELS[header_no][category_no]}}</b>
+          {% else %}
+            <a href="{{pdsf.webapp_link|safe}}"><span class="tip">{{CATEGORY_LABELS[header_no][category_no]}}<span class="tiptext">
+              {{CATEGORY_TOOLTIPS_ASSOCIATED[header_no][category_no]}}</span></span></a>
+          {% endif %}
+        {% endif %}
+
+      {% endfor %}
+
+      {% if header_no == 0 %}
+        |
+        {% if wget_path and not query.is_index_row %}
+          <a href="{{wget_path}}"
+            target="_blank"><span class="tip">WGET access<span class="tiptext">
+              View this directory in the file system, for WGET and other download methods</span></span></a>
+        {% else %}
+          <span style="color:silver;">WGET access</span>
+        {% endif %}
+      {% endif %}
+      ]
+
+    {% endif %}
+  {% endfor %}
+  </p>
+
+  <!-- View Options -->
+
+  {% if not suppress_view_options %}
+
+    <p align="left">
+
+    <b>View options</b>:
+
+    [
+    {% if not grid_view_allowed %}
+      <span style="color:silver;">
+    {% endif %}
+
+    {% if links_for_grid_display[0] and grid_view_allowed %}
+      <a href="{{links_for_grid_display[0]|safe}}"><span class="tip">List view<span class="tiptext">
+        View these products as a list of files</span></span></a>    <!-- Allowed, not selected -->
+    {% elif params['grid'] == 0 %}
+      <b>List view</b>                                              <!-- Current selection -->
+    {% else %}
+      List view
+    {% endif %}
+    |
+    {% if links_for_grid_display[1] and grid_view_allowed %}        <!-- Allowed, not selected -->
+      <a href="{{links_for_grid_display[1]|safe}}"><span class="tip">Small grid<span class="tiptext">
+        View these products as a grid of small preview products</span></span></a>
+    {% elif params['grid'] == 1 %}                                  <!-- Allowed, selected -->
+      <b>Small grid</b>
+    {% else %}
+      Small grid
+    {% endif %}
+    |
+    {% if links_for_grid_display[2] and grid_view_allowed %}        <!-- Allowed, not selected -->
+      <a href="{{links_for_grid_display[2]|safe}}"><span class="tip">Large grid<span class="tiptext">
+        View these products as a grid of large preview products</span></span></a>
+    {% elif params['grid'] == 2 %}                                  <!-- Allowed, selected -->
+      <b>Large grid</b>
+    {% else %}
+      Large grid
+    {% endif %}
+
+    {% if not grid_view_allowed %}
+      </span>
+    {% endif %}
+    ]
+
+    &nbsp;&nbsp;&nbsp;
+
+    [
+    {% if not multipage_view_allowed %}
+      <span style="color:silver;">
+    {% endif %}
+
+    {% if links_for_page_counts[1] and multipage_view_allowed %}
+      <a href="{{links_for_page_counts[1]|safe}}"><span class="tip">Single directory<span class="tiptext">
+        View only this directory</span></span></a>
+                                          <!-- Allowed, not selected -->
+    {% elif params['pages'] == 1 %}
+      <b>Single directory</b>             <!-- Current selection -->
+    {% else %}
+      Single directory
+    {% endif %}
+
+    {% for k in range(2,params['max_pages']+1) %}
+      |
+      {% if links_for_page_counts[k] and multipage_view_allowed %}
+          <a href="{{links_for_page_counts[k]|safe}}"><span class="tip">{{k}}<span class="tiptext">
+            View {{k}} directories all at once, starting with this one</span></span></a>
+                                          <!-- Allowed, not selected -->
+      {% elif params['pages'] == k %}
+        <b>{{k}}</b>                      <!-- Current selection -->
+      {% else %}
+        {{k}}
+      {% endif %}
+    {% endfor %}
+
+    {% if not multipage_view_allowed %}
+      </span>
+    {% endif %}
+    ]
+
+    &nbsp;&nbsp;&nbsp;
+
+    [
+
+    {% if not continuous_view_allowed %}
+      <span style="color:silver;">
+    {% endif %}
+
+    Directory dividers
+
+    {% if links_for_continuous[0] and continuous_view_allowed %}
+      <a href="{{links_for_continuous[0]|safe}}"><span class="tip">on<span class="tiptext">
+        Include dividers while viewing multiple directories</span></span></a>
+                                              <!-- Allowed, not selected -->
+    {% elif not params['continuous'] %}
+      <b>on</b>                               <!-- Current selection -->
+    {% else %}
+      on
+    {% endif %}
+    |
+    {% if links_for_continuous[1] %}
+      <a href="{{links_for_continuous[1]|safe}}"><span class="tip">off<span class="tiptext">
+        Suppress dividers while viewing multiple directories</span></span></a>
+                                              <!-- Allowed, not selected -->
+    {% elif params['continuous'] %}
+      <b>off</b>                              <!-- Current selection -->
+    {% else %}
+      off
+    {% endif %}
+
+    {% if not continuous_view_allowed %}
+      </span>
+    {% endif %}
+    ]
+    </p>
+  {% endif %}
+
+  {% if not suppress_filename_filter %}
+    <p align="left">
+
+    {% if query.isdir %}
+      <form method="POST" action='{{set_filter}}'}>
+      {{filter_form.hidden_tag()}}
+      <b>{{filter_form.filter.label}}</b>:
+      {{filter_form.filter(size=20)}}
+      <input type="submit" value="Enter">
+
+      [<a href="{{localhost}}/help/filename_filters.html" target="_blank"><span class="tip">?<span class="tiptext">
+        View help about how to filter file names</span></span></a>]
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <span style="color:red;">{{message|safe}}</span>
+        {% endfor %}
+      {% endwith %}
+
+      </form>
+
+    {% else %}
+      <span style="color:silver;">
+      <table border="1" cellpadding="1" cellspacing="1">
+      <b>File name filter</b>: [<span style="font-family:courier;">&nbsp;{{params.filter|safe}}&nbsp;</span>]
+    {% endif %}
+
+    </p>
+  {% endif %}
+
+</div>
+{% else %}
+<p/>
+{% endif %}
+

@@ -1,0 +1,377 @@
+{% set suppress_tables = grid_layout %}
+{% set suppress_assoc = (grid_layout and page_count > 1) %}
+
+{% set TABLE_ICONSIZE = 50 %}
+{% set SHADES = ["ffffff", "eeeeee"] %}
+
+<!-- Begin table div -->
+
+{% if suppress_tables %}
+  {% set ntables = 0 %}
+  {% set table_is_visible = table_is_visible[tables|length:] %}
+  {% set table_row0 = table_row0[tables|length:] %}
+  {% set table_row1 = table_row1[tables|length:] %}
+{% else %}
+  {% set ntables = tables|length %}
+{% endif %}
+
+{% if suppress_assoc %}
+  {% set nassoc = 0 %}
+  {% set ndocs = 0 %}
+{% else %}
+  {% set nassoc = associations|length %}
+  {% set ndocs = documents|length %}
+{% endif %}
+
+{% set all_tables = tables[:ntables] + associations[:nassoc] + documents[:ndocs] %}
+{% if all_tables|length > 0 %}
+
+  <div align="center">
+  <table border="0" cellpadding="4" cellspacing="0" width="100%">
+
+  {% for table_no in range(all_tables|length) %}
+    {% set table = all_tables[table_no] %}
+    {% set groups = table.groups %}
+
+    {% if table_no == ntables and nassoc > 0 %}
+      <tr bgcolor="ffffff">
+        <td colspan="8" align="left" valign="center">
+          &nbsp;
+        </td>
+      </tr>
+
+      <tr bgcolor="ffffff">
+        <td colspan="8" align="left" valign="center">
+          <a name="related"></a>
+          <b>Related files:</b>
+        </td>
+      </tr>
+
+    {% elif table_no == ntables + nassoc %}
+      <tr bgcolor="ffffff">
+        <td colspan="8" align="left" valign="center">
+          &nbsp;
+        </td>
+      </tr>
+
+      <tr bgcolor="ffffff">
+        <td colspan="8" align="left" valign="center">
+          <a name="documents"></a>
+          <b>Documentation:</b>
+        </td>
+      </tr>
+    {% endif %}
+
+    {% if table_no == 0 %}
+    <!-- Navigation before first header -->
+      {% include "level_navigation.html" %}
+      {% include "neighbor_navigation.html" %}
+    {% endif %}
+
+    {% if table_no in (0, ntables, ntables + nassoc) %}
+      <!-- Table header -->
+      <tr bgcolor="#72a7cf" class="border_bottom">
+        <th align="left"></th>
+        {% if (table.levels|length) == 1 %}
+          {% if table.levels[0].logical_path == 'documents' %}
+            <th align="left">Volume Set</th>
+            <th align="left"></th>
+            <th align="center"></th>
+            <th align="center">Documents</th>
+            <th align="center">Updated</th>
+            <th align="left" colspan="2">Description</th>
+          {% else %}
+            <th align="left">Volume Set</th>
+            <th align="left"></th>
+            <th align="center">Version</th>
+            <th align="center">Volumes</th>
+            <th align="center">Updated</th>
+            <th align="left" colspan="2">Description</th>
+          {% endif %}
+        {% elif (table.levels|length) == 2 %}
+          {% if table.levels[0].logical_path == 'documents' %}
+            <th align="left">File name</th>
+            <th align="left"></th>
+            <th align="center">Version</th>
+            <th align="center">Size</th>
+            <th align="center">Date</th>
+            <th align="left" colspan="2">Description</th>
+          {% else %}
+            <th align="left">Volume</th>
+            <th align="left"></th>
+            <th align="center">Version</th>
+            <th align="center">Size</th>
+            <th align="center">Released</th>
+            <th align="left" colspan="2">Description</th>
+          {% endif %}
+        {% else %}
+          <th align="left">File name</th>
+          <th align="left"></th>
+          <th align="center"></th>
+          <th align="center">Size</th>
+          <th align="center">Modified</th>
+          <th align="left">Description</th>
+          <th align="right">
+            <span style="color:black;">
+                <a href="{{localhost|safe}}/help/checksums.html"
+                   target="_blank">MD5 Checksum</a>
+            </span>
+          </th>
+        {% endif %}
+      </tr>
+    {% endif %}
+
+    {% if table_no == 0 and row_range_links and not suppress_tables %}
+      <!-- Link to other row ranges if necessary -->
+      <tr bgcolor="{{SHADES[1-table_row0[table_no]%2]}}">
+        <td colspan="8" style="text-align:center">
+          {% include "row_ranges.html" %}
+        </td>
+      </tr>
+    {% endif %}
+
+    {% if table_no > 0 %}
+      <!-- Navigation above each table after first -->
+      {% include "level_navigation.html" %}
+    {% endif %}
+
+    <!-- Table rows, grouped -->
+
+    {% if not table_is_visible[table_no] %}
+        <!-- Invisible table! -->
+    {% elif groups|length == 0 %}
+      <tr>
+        <td></td>
+        <td align="left" colspan="8">(empty directory)</td>
+      </tr>
+    {% else %}
+      {% if table_no == 0 %}
+        {% set row0 = table_row0[table_no] %}
+        {% set row1 = table_row1[table_no] %}
+      {% else %}
+        {% set row0 = 0 %}
+        {% set row1 = groups|length %}
+      {% endif %}
+      {% for group_no in range(row0,row1) %}
+        {% set group = groups[group_no] %}
+        {% set shade = SHADES[group_no % 2] %}
+        {% for row_no in range(group.rows|length) %}
+          {% set row = group.rows[row_no] %}
+
+          <!-- Column 1: icon or browse -->
+
+          {% if row_no == 0 %}
+            <tr bgcolor="{{shade}}">
+              <td rowspan="{{group.rows|length}}" valign="center" align="left">
+
+                {% if row.abspath and row.abspath[-5:] == '.link' %}
+                  <a href="{{group.rows[0].url|safe}}" target="_blank" class="imagelink">
+                  {% set tooltip = 'Visit this external web page' %}
+                {% elif not row.isdir and row.category_ == 'documents/' and row.extension|lower in viewable_extensions %}
+                  <a href="{{localhost|safe}}{{row.url|safe}}" class="imagelink" target="_blank">
+                  {% set tooltip = 'View this file' %}
+                {% elif not row.isdir and row.category_ == 'documents/' and row.extension|lower in unviewable_extensions %}
+                  <a href="{{localhost|safe}}{{row.url|safe}}" class="imagelink" target="_blank">
+                  {% set tooltip = 'Download this file' %}
+                {% elif not row.isdir and row.category_ == 'documents/' %}
+                  <a href="{{localhost|safe}}{{row.url|safe}}" class="imagelink">
+                  {% set tooltip = 'View or download this file' %}
+                {% elif row.isdir and row.logical_path != query.logical_path %}
+                  <a href="{{group.webapp_link|safe}}" class="imagelink">
+                  {% set tooltip = 'Go to this directory in Viewmaster' %}
+                {% elif group.webapp_link and row.logical_path != query.logical_path %}
+                  <a href="{{group.webapp_link|safe}}" class="imagelink">
+                  {% set tooltip = 'View more details about this product in Viewmaster' %}
+                {% else %}
+                  {% set tooltip = '' %}
+                {% endif %}
+
+                {% if group.rows|length == 1 and group.rows[0].islabel %}
+                  {% set viewset = group.iconset_closed %}
+                {% elif params['preview'] in group.all_viewsets %}
+                  {% set viewset = group.all_viewsets[params['preview']] %}
+                {% elif group.viewset %}
+                  {% set viewset = group.viewset %}
+                {% else %}
+                  {% set viewset = group.iconset_closed %}
+                {% endif %}
+
+                {% set view = viewset.for_frame(TABLE_ICONSIZE) %}
+
+                {% if tooltip %}
+                  <span class="tip"><img src="{{localhost|safe}}{{view.url|safe}}"
+                     alt="{{group.anchor}}"
+                     width="{{view.width}}"
+                     height="{{view.height}}"
+                     align="left"><span class="tiptext">{{tooltip}}</span></span></a>
+                {% else %}
+                  <img src="{{localhost|safe}}{{view.url|safe}}"
+                     alt="{{group.anchor}}"
+                     width="{{view.width}}"
+                     height="{{view.height}}"
+                     align="left">
+                {% endif %}
+              </td>
+
+          {% else %}
+
+            <tr bgcolor="{{shade}}">
+
+          {% endif %}
+
+          <!-- Columns 2: Volume Set, Volume or Filename -->
+
+          {% if row.exact_archive_url or row.exact_checksum_url %}
+            {% set colspan = 1 %}
+          {% else %}
+            {% set colspan = 2 %}
+          {% endif %}
+
+          <td align="left" colspan="{{colspan}}">
+            {% if row.is_index_row %}
+              <a href="{{row.webapp_link|safe}}"><span class="tip">{{row.parent_basename}}/{{row.basename}}<span class="tiptext">
+                View the index rows associated with this product</span></span></a>
+            {% elif row.isdir %}
+              <a href="{{row.webapp_link|safe}}"><span class="tip">{{row.basename}}<span class="tiptext">
+                Go to this directory in Viewmaster</span></span></a>
+            {% elif not row.url %}
+              {{row.basename}}
+            {% elif row.basename[-4:]|lower == '.lbl' %}
+              <a href="{{localhost}}{{row.url|safe}}" target="_blank"><span class="tip">{{row.basename}}<span class="tiptext">
+                View this label file</span></span></a>
+            {% elif row.basename[-5:] == '.link' and 'pds' in row.basename|lower %}
+              <a href="{{row.url|safe}}" target="_blank"><span class="tip">{{row.basename}}<span class="tiptext">
+                Visit this PDS web page</span></span></a>
+            {% elif row.basename[-5:] == '.link' %}
+              <a href="{{row.url|safe}}" target="_blank"><span class="tip">{{row.basename}}<span class="tiptext">
+                Visit this external web page</span></span></a>
+            {% elif row.extension|lower in viewable_extensions %}
+              <a href="{{localhost}}{{row.url|safe}}" target="_blank"><span class="tip">{{row.basename}}<span class="tiptext">
+                View this file</span></span></a>
+            {% elif row.extension|lower in unviewable_extensions %}
+              <a href="{{localhost}}{{row.url|safe}}" target="_blank"><span class="tip">{{row.basename}}<span class="tiptext">
+                Download this file</span></span></a>
+            {% else %}
+              <a href="{{localhost}}{{row.url|safe}}"><span class="tip">{{row.basename}}<span class="tiptext">
+                View or download this file</span></span></a>
+            {% endif %}
+          </td>
+
+          <!-- Column 3: additional links if any -->
+
+          {% if colspan == 1 %}
+            <td align="left">
+              {% if row.exact_archive_url %}
+                <span style="font-size:small;">
+                  [<a href="{{localhost|safe}}{{row.exact_archive_url|safe}}"
+                      target="_blank"><span class="tip">tar.gz<span class="tiptext">
+                      Download a compressed tar file of this directory tree</span></span></a>]
+                </span>
+              {% endif %}
+
+              {% if row.exact_checksum_url %}
+                <span style="font-size:small;">
+                  [<a href="{{localhost|safe}}{{row.exact_checksum_url|safe}}"
+                      target="_blank"><span class="tip">MD5.txt<span class="tiptext">
+                      View MD5 checksums for this directory tree</span></span></a>]
+                </span>
+              {% endif %}
+            </td>
+          {% endif %}
+
+          <!-- Column 4: Version if any -->
+
+          {% if (table.levels|length) <= 2 %}
+            <td align="center">
+              {{row.volume_version_id}}
+            </td>
+          {% else %}
+            <td align="center">
+            </td>
+          {% endif %}
+
+          <!-- Column 5: Size -->
+
+          <td align="center">
+            {% if (table.levels|length) == 1 %}
+              {{row.childnames|length}}
+            {% elif row.logical_path.endswith('.link') %}
+              <!-- don't print file sizes for links -->
+            {% elif row.formatted_size %}
+              {{row.formatted_size}}
+            {% elif row.isdir %}
+              (empty)
+            {% endif %}
+          </td>
+
+          <!-- Column 6: Date -->
+
+          <td align="center">
+            {% if row.category_ == 'volumes/' and not row.interior %}
+              {{row.volume_publication_date[:10]}}
+            {% elif row.category_ == 'documents/' %}
+              {{row.volume_publication_date[:10]}}
+            {% else %}
+              {{row.date[:10]}}
+            {% endif %}
+          </td>
+
+          <!-- Column 7: Description -->
+          <!-- Colume 8: Checksum (Filenames only) -->
+
+          {% if row.checksum %}
+            {% set colspan = 1 %}
+          {% else %}
+            {% set colspan = 2 %}
+          {% endif %}
+
+          <td align="left" colspan="{{colspan}}">
+            {% if row.is_index_row %}
+              {{row.description|safe}}
+              <a href="{{viewmaster_|safe}}{{row.parent_logical_path}}"><span class="tip">{{row.parent_basename}}<span class="tiptext">
+                View this entire index in Viewmaster</span></span></a>
+            {% elif row.abspath == info.abspath %}
+              {{row.description|safe}}; <a href="#content"><span class="tip">see below<span class="tiptext">
+                Jump to this content below in this page</span></span></a>
+            {% else %}
+              {{row.description|safe}}
+            {% endif %}
+          </td>
+
+          {% if colspan == 1 %}
+            <td align="right">
+              <code>
+                {{row.checksum}}
+              </code>
+            </td>
+          {% endif %}
+        </tr>
+
+        {% endfor %}
+      {% endfor %}
+    {% endif %}
+
+    {% if table_no == ntables-1 and not suppress_tables %}
+      {% if row_range_links %}
+        <!-- Link to other row ranges -->
+        <tr bgcolor="{{SHADES[table_row1[table_no]%2]}}">
+          <td align="center" colspan="8">
+            {% include "row_ranges.html" %}
+          </td>
+        </tr>
+      {% endif %}
+
+      <tr>
+        <td colspan="8" align="left" valign="center">
+          <!-- Neighbor navigation below first set of tables-->
+          {% include "neighbor_navigation.html" %}
+        </td>
+      </tr>
+    {% endif %}
+  {% endfor %}
+
+  </table>
+  </div>
+
+{% endif %}
+<hr/>

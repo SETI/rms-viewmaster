@@ -1,0 +1,29 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<font face="Arial">
+<head>
+  <title>{{query.logical_path}}</title>
+  <link rel="stylesheet" href="/feedback/css/feedback.css" type="text/css"/>
+  <link href="https://use.fontawesome.com/releases/v5.4.1/css/all.css" rel="stylesheet"
+        integrity="sha384-5sAR7xN1Nv6T6+dT2mhtzEpVJvfS3NScPQTrOxhwjIuvcA67KV2R5Jz6kr4abQsz"
+        crossorigin="anonymous" media="all"/>
+</head>
+
+<body style="font-family:arial;">
+
+{% include "page_header.html" %}
+{% include "index_row_div.html" %}
+
+{% set prev = [] %}
+{% set next = [] %}
+{% set tables = tables[1:] %}
+
+<br/>
+
+{% include "table_div.html" %}
+{% include "info_div.html" %}
+
+{% include "feedback.html" %}
+</body>
+</font>
+</html>

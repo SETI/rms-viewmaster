@@ -1,0 +1,78 @@
+<!-- Navigation through neighbors, within table -->
+{% if (prev or next) and not query.is_category_dir %}
+  <tr bgcolor="#e2edf5" class="border_bottom">
+    <td colspan="8" align="center" valign="center">
+      {% if prev[-1].terminated %}
+        [
+      {% else %}
+        ...
+      {% endif %}
+
+      {% for p in prev[::-1][:-1] %}
+        {% set slash = '/' if p.isdir else '' %}
+        {% if p.nav_link %}
+          <span style="color:black;">
+            {% if p.isdir %}
+              <a href="{{p.nav_link|safe}}"><span class="tip">{{p.nav_name}}<span class="tiptext" id="slow">
+                Go to this directory in Viewmaster</span></span></a>/
+            {% else %}
+              <a href="{{p.nav_link|safe}}"><span class="tip">{{p.nav_name}}<span class="tiptext" id="slow">
+                View details about this product in Viewmaster</span></span></a>
+            {% endif %}
+          </span>
+        {% else %}
+          <span style="color:silver;">
+            {{p.nav_name}}{{slash}}
+          </span>
+        {% endif %}
+        {% if p.division %}
+          &nbsp; ||
+        {% endif %}
+
+        &nbsp;
+      {% endfor %}
+
+      {% set p = prev[0] %}
+      {% set slash = '/' if p.isdir else '' %}
+
+      {% if not p.exists %}             <!-- Current page selection -->
+        <span style="color:silver;">
+            {{p.basename}}{{slash}}
+        </span>
+      {% else %}
+        <b>{{p.basename}}</b>{{slash}}
+      {% endif %}
+
+      {% for n in next[1:] %}
+        {% set slash = '/' if n.isdir else '' %}
+        &nbsp;
+        {% if n.division %}
+          || &nbsp;
+        {% endif %}
+
+        {% if n.nav_link %}
+          <span style="color:black;">
+            {% if n.isdir %}
+              <a href="{{n.nav_link|safe}}"><span class="tip">{{n.nav_name}}<span class="tiptext" id="slow">
+                Go to this directory in Viewmaster</span></span></a>/
+            {% else %}
+              <a href="{{n.nav_link|safe}}"><span class="tip">{{n.nav_name}}<span class="tiptext" id="slow">
+                View details about this product in Viewmaster</span></span></a>
+            {% endif %}
+          </span>
+        {% else %}
+          <span style="color:silver;">
+            {{n.nav_name}}{{slash}}
+          </span>
+        {% endif %}
+
+      {% endfor %}
+
+      {% if next[-1].terminated %}
+        ]
+      {% else %}
+        ...
+      {% endif %}
+    </td>
+  </tr>
+{% endif %}

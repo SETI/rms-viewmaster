@@ -1,0 +1,155 @@
+<style>
+.floated_img
+{
+    float: left;
+    padding: 10px;
+    position: relative;
+    z-index: 0;
+}
+.floated_img:hover {
+    z-index: 1;
+    opacity: 0.85;
+}
+</style>
+
+{% set GRID_ICONSIZE = [0, 200, 400] %}
+
+<!-- Begin grid div -->
+
+<div align="center">
+
+{% set gridsize = GRID_ICONSIZE[params['grid']] %}
+
+{% set all_tables = tables %}
+{% for table_no in range(tables|length) %}
+  {% set table = all_tables[table_no] %}
+
+  {% if table_no == 0 or (table_no > 0 and not params['continuous']) %}
+    <table border="0" cellpadding="4" cellspacing="0" width="100%">
+
+    <!-- Navigation through hierarchy -->
+    {% include "level_navigation.html" %}
+
+    {% if table_no == 0 %}
+      <!-- Navigation through neighbors -->
+      {% include "neighbor_navigation.html" %}
+
+      {% if row_range_links %}
+        <tr>
+          <td align="center">
+            {% include "row_ranges.html" %}
+          </td>
+        </tr>
+      {% endif %}
+    {% endif %}
+
+    </table>
+  {% endif %}
+
+  <!-- Grid -->
+
+  {% if not table_is_visible[table_no] %}
+    <!-- Invisible table! -->
+  {% elif (table.groups|length) == 0 %}
+    <table border="0" cellpadding="4" cellspacing="0" width="100%">
+      <tr>
+        <td align="center">
+          (empty directory)
+        </td>
+      </tr>
+    </table>
+  {% else %}
+    {% for group_no in range(table_row0[table_no],table_row1[table_no]) %}
+      {% set group = table.groups[group_no] %}
+
+      <div class="floated_img" align="left">
+
+        {% if group.global_anchor %}
+          <a name="{{group.global_anchor}}">
+        {% endif %}
+
+        {% if params['preview'] in group.all_viewsets %}
+          {% set viewset = group.all_viewsets[params['preview']] %}
+        {% elif group.viewset %}
+          {% set viewset = group.viewset %}
+        {% else %}
+          {% set viewset = group.iconset_closed %}
+        {% endif %}
+
+        {% set view = viewset.for_height(gridsize) %}
+
+        {% if group.rows[0].abspath and group.rows[0].abspath[-5:] == '.link' %}
+          <a href="{{group.rows[0].url|safe}}" target="_blank" class="imagelink">
+          {% set end_href = '</a>' %}
+        {% elif group.webapp_link %}
+          <a href="{{group.webapp_link|safe}}" class="imagelink">
+          {% set end_href = '</a>' %}
+        {% else %}
+          {% set end_ref = '' %}
+        {% endif %}
+
+        <span class="tip"><img src="{{localhost|safe}}{{view.url|safe}}"
+             alt="{{group.anchor}}"
+             width="{{view.width}}"
+             height="{{view.height}}"
+             align="left"><span class="tiptext">
+          {% if group.isdir %}
+            View this directory in Viewmaster
+          {% else %}
+            View more details about this product in Viewmaster
+          {% endif %}
+        </span></span>{{end_href|safe}}
+
+        {% for row_no in range(group.rows|length) %}
+          {% set row = group.rows[row_no] %}
+
+          {% if '.LBL' in row.basename %}
+            {% set suffix = '.LBL' %}
+          {% elif '.lbl' in row.basename %}
+            {% set suffix = '.lbl' %}
+          {% else %}
+            {% set suffix = '' %}
+          {% endif %}
+
+          {% if row.abspath and row.basename[-5:] == '.link' and 'pds' in row.basename|lower %}
+            <br/><a href="{{group.rows[0].url|safe}}" target="_blank"><span class="tip">{{row.basename}}<span class="tiptext">
+                Visit this external web page</span></span></a>
+          {% elif row.abspath and row.basename[-5:] == '.link' %}
+            <br/><a href="{{group.rows[0].url|safe}}" target="_blank"><span class="tip">{{row.basename}}<span class="tiptext">
+                Visit this external web page</span></span></a>
+          {% elif row.isdir %}
+            <br/><a href="{{row.webapp_link|safe}}"><span class="tip">{{row.basename}}<span class="tiptext">
+                View this directory in Viewmaster</span></span></a>
+          {% elif suffix and row_no > 0 and
+                group.rows[row_no-1].basename[:row.basename|length-4] == row.basename[:-4] %}
+            [<a href="{{localhost|safe}}{{row.url|safe}}"><span class="tip">{{suffix}}<span class="tiptext">
+                View this label file</span></span></a>]
+          {% elif row.extension|lower in viewable_extensions %}
+            <br/><a href="{{localhost|safe}}{{row.url|safe}}" target="_blank"><span class="tip">{{row.basename}}<span class="tiptext">
+                View this file</span></span></a>
+          {% elif row.extension|lower in unviewable_extensions %}
+            <br/><a href="{{localhost|safe}}{{row.url|safe}}" target="_blank"><span class="tip">{{row.basename}}<span class="tiptext">
+                Download this file</span></span></a>
+          {% else %}
+            <br/><a href="{{localhost|safe}}{{row.url|safe}}"><span class="tip">{{row.basename}}<span class="tiptext">
+                View or download this file</span></span></a>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endfor %}
+
+<table border="0" cellpadding="4" cellspacing="0" width="100%">
+  {% if row_range_links %}
+    <tr>
+      <td align="center">
+        {% include "row_ranges.html" %}
+      </td>
+    </tr>
+  {% endif %}
+
+  {% include "neighbor_navigation.html" %}
+</table>
+
+</div>
