@@ -7,14 +7,16 @@ import socket
 import sys
 
 # Test for a command line run
-VIEWMASTER_TESTING = ('flask' in sys.argv[0] or 'ipython' in sys.argv[0])
-VIEWMASTER_FOR_MARK = ('mark' in socket.gethostname().lower() or
+VIEWMASTER_TESTING = ('flask' in sys.argv[0] or 'ipython' in sys.argv[0])  # XXX WRONG
+VIEWMASTER_FOR_MARK = ('mark' in socket.gethostname().lower() or  # XXX OUTDATED
                        'local' in socket.gethostname().lower())
+
+VIEWMASTER_TESTING = True  # XXX
 
 # For command-line testing and development
 if VIEWMASTER_TESTING:
-    LOCALHOST_ = 'http://localhost/'
-    VIEWMASTER_PREFIX_ = 'http://127.0.0.1:5000/'
+    LOCALHOST_ = '/'
+    VIEWMASTER_PREFIX_ = 'http://127.0.0.1:8080/'
     WEBSITE_HTTP_HOME = 'http://localhost'
     LOGNAME = 'pds.viewmaster.testing'
     VIEWMASTER_MEMCACHE_PORT = 0
