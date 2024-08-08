@@ -1870,7 +1870,7 @@ def set_filter():
 
 @app.route('/icons-local/<path:query_path>')
 def return_icons_local(query_path):
-    return send_file(f'icons-local/{query_path}', mimetype='image/png')
+    return send_file(f'../icons/{query_path}', mimetype='image/png')
 
 @app.route('/holdings/<path:query_path>')
 def return_holdings_local(query_path):
