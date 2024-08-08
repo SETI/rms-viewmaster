@@ -6,8 +6,7 @@
 ################################################################################
 
 import os
-import pdsfile
-import pdsviewable
+import pdsfile.pdsviewable as pdsviewable
 
 class PdsGroup(object):
     """PdsGroup defines an ordered list of PdsFiles that are expected to be

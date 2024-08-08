@@ -1,8 +1,6 @@
-from flask import Flask, flash, redirect, render_template, request, session, \
-                  abort, url_for
+from flask import Flask, flash, redirect, render_template, redirect, request, send_file
 from flask_wtf import FlaskForm
 from wtforms import StringField, HiddenField
-import werkzeug
 
 import os, sys
 import cgi
@@ -19,14 +17,12 @@ import time
 import urllib
 import zlib
 
-import pdscache
 import pdsfile
+from pdsfile import pdscache, Pds3File, pdsviewable
 import pdsiterator
 import pdslogger
-import pdsviewable
 import pdstable
 
-from pdsfile import PdsFile
 from pdsgroup import PdsGroup
 from pdsgrouptable import PdsGroupTable
 
@@ -55,7 +51,7 @@ LOCAL_IP_ADDRESS_A_B_C = LOCAL_IP_ADDRESS.rpartition('.')[0] + '.'
 
 from viewmaster_config import *
 if USE_SHELVES_ONLY:
-    pdsfile.use_shelves_only(True)
+    Pds3File.use_shelves_only(True)
 
 try:
     LOGGER = pdslogger.PdsLogger.get_logger(LOGNAME)
@@ -66,7 +62,9 @@ except KeyError:
 LOG_FILE = LOG_ROOT_PREFIX_ + 'viewmaster.log'
 info_logfile = os.path.abspath(LOG_FILE)
 
-if not sys.stdin.isatty():      # don't do this when testing in interactive mode
+if sys.stdin.isatty():
+    LOGGER.add_handler(pdslogger.stdout_handler)
+else:  # don't do this when testing in interactive mode
     info_handler = pdslogger.file_handler(info_logfile, level=logging.INFO,
                                           rotation='midnight')
     LOGGER.add_handler(info_handler)
@@ -77,7 +75,7 @@ debug_handler = pdslogger.file_handler(debug_logfile, level=logging.DEBUG,
                                        rotation='midnight')
 LOGGER.add_handler(debug_handler)
 
-pdsfile.set_logger(LOGGER)              # Let PdsFile also log
+Pds3File.set_logger(LOGGER)              # Let PdsFile also log
 
 ################################################################################
 ################################################################################
@@ -163,9 +161,13 @@ UNVIEWABLE_EXTENSIONS = set(['.zip', '.tar.gz', '.tar', '.tgz', '.jar'])
 
 BOOT_TIME = psutil.boot_time()
 
+# XXX WHY DO WE ALLOW A LIST OF HOLDINGS PATHS INSTEAD OF A SINGLE PATH?
 def get_holdings_paths():
     """Return the list of holdings directories."""
 
+    pds3_env = os.getenv('PDS3_HOLDINGS_DIR')  # XXX PDS4
+    if pds3_env is not None:
+        return [pds3_env]
     with open(HTTPD_CUSTOMIZATION) as f:
         recs = f.readlines()
 
@@ -264,7 +266,6 @@ def create_holdings_symlinks(abspaths):
     symlinked_abspaths = []
     for k, abspath in enumerate(abspaths):
         symlink = DOCUMENT_ROOT_ + 'holdings' + (str(k) if k else '')
-
         symlinked = False
         if os.path.islink(symlink):         # exists and is a symlink
             realpath = os.path.realpath(symlink)
@@ -336,6 +337,7 @@ except Exception as e:
     LOGGER.exception(e)
     sys.exit(1)
 
+assert len(paths) == 1
 HOLDINGS_PATHS = paths
 
 PAGE_CACHE = None
@@ -347,8 +349,8 @@ if PAGE_CACHING:
             LOGGER.info('Connecting Viewmaster to Memcache [%s]' %
                         VIEWMASTER_MEMCACHE_PORT)
             PAGE_CACHE = pdscache.MemcachedCache(VIEWMASTER_MEMCACHE_PORT,
-                                                lifetime=pdsfile.cache_lifetime,
-                                                logger=LOGGER)
+                                                 lifetime=pdsfile.cache_lifetime,
+                                                 logger=LOGGER)
 
         # On failure, switch to DictionaryCache
         except pylibmc.Error as e:
@@ -382,7 +384,9 @@ def initialize_caches(reset=False):
     global HOLDINGS_PATHS, PAGE_CACHING
 
     LOGGER.replace_root(HOLDINGS_PATHS)
-    pdsfile.preload(HOLDINGS_PATHS, port=PDSFILE_MEMCACHE_PORT, clear=reset)
+    print(VIEWMASTER_PREFIX_+ICON_URL_)
+    Pds3File.preload(HOLDINGS_PATHS, port=PDSFILE_MEMCACHE_PORT,
+                     clear=reset, icon_url=ICON_URL_)
 
     if reset and PAGE_CACHE and (PDSFILE_MEMCACHE_PORT !=
                                  VIEWMASTER_MEMCACHE_PORT):
@@ -438,7 +442,7 @@ def load_infopage_content(page_pdsfile, hrefs=True):
 
     # Insert hrefs (carefully!)
     for (recno, basename, abspath) in link_info:
-        pdsf = PdsFile.from_abspath(abspath)
+        pdsf = Pds3File.from_abspath(abspath)
         line = lines[recno]
         parts = line.split(basename)
 
@@ -544,7 +548,7 @@ def get_prev_next_navigation(query_pdsfile):
 
             iteration_terminated = True
             for (neighbor, nav_name, level) in iter:
-                neighbor = PdsFile.from_logical_path(neighbor)
+                neighbor = Pds3File.from_logical_path(neighbor)
                 neighbor.nav_name = nav_name
                 neighbor.division = (level > 0)
                 neighbor.terminated = False     # default
@@ -604,14 +608,14 @@ def list_next_pdsfiles(query_pdsfile):
     if query_pdsfile.isdir:
         forward = pdsiterator.PdsDirIterator(query_pdsfile)
         for (logical_path, _, _) in forward:
-            siblings.append(PdsFile.from_logical_path(logical_path))
+            siblings.append(Pds3File.from_logical_path(logical_path))
             if len(siblings) >= MAX_PAGES:
                 break
 
     else:
         forward = pdsiterator.PdsFileIterator(query_pdsfile)
         for (logical_path, _, _) in forward:
-            siblings.append(PdsFile.from_logical_path(logical_path))
+            siblings.append(Pds3File.from_logical_path(logical_path))
             if len(siblings) >= MAX_PAGES:
                 break
 
@@ -717,7 +721,9 @@ def get_parallels(query_pdsfile):
     multiple versions."""
 
     parallels = {}
-    for voltype in pdsfile.VOLTYPES:
+    for voltype in pdsfile.Pds3File.VOLTYPES:
+        if voltype == 'bundles':  # XXX PDS4
+            continue
         for archives in ('archives-', ''):
             key = archives + voltype
             parallels[key] = query_pdsfile.associated_parallel(category=key)
@@ -757,7 +763,7 @@ def get_parallels(query_pdsfile):
             if data_pdsfile.islabel:
                 abspaths = data_pdsfile.data_abspaths
                 if len(abspaths):
-                    parallels['volumes'] = PdsFile.from_abspath(abspaths[0])
+                    parallels['volumes'] = Pds3File.from_abspath(abspaths[0])
             else:
                 parallels['volumes'] = data_pdsfile
 
@@ -897,7 +903,7 @@ def get_directory_page(query_pdsfile):
         if pdsfiles:
             associations += PdsGroupTable.tables_from_pdsfiles(pdsfiles,
                                                                exclusions)
-            exclusions |= set(PdsFile.logicals_for_pdsfiles(pdsfiles))
+            exclusions |= set(Pds3File.logicals_for_pdsfiles(pdsfiles))
 
     page['associations'] = associations
 
@@ -1097,7 +1103,7 @@ def directory_page_html(query_pdsfile, params):
         for table in page['tables']:
             exclusions += list(table.pdsfile_iterator()) + table.levels
 
-        exclusions = set(PdsFile.logicals_for_pdsfiles(exclusions))
+        exclusions = set(Pds3File.logicals_for_pdsfiles(exclusions))
 
         # Create tables for associated categories
         associations = []
@@ -1181,7 +1187,7 @@ def get_product_page_info(query_pdsfile):
         info_pdsfile = query_pdsfile
     elif query_pdsfile.is_index_row:            # index row case
         parent_label_abspath = sib_pdsfile.label_abspath
-        info_pdsfile = PdsFile.from_abspath(parent_label_abspath)
+        info_pdsfile = Pds3File.from_abspath(parent_label_abspath)
     elif query_pdsfile.islabel:                 # show self
         info_pdsfile = query_pdsfile
     else:                                       # show label if any
@@ -1273,7 +1279,7 @@ def get_product_page_info(query_pdsfile):
         pdsfiles = query_pdsfile.associated_pdsfiles(category)
         associations +=  PdsGroupTable.tables_from_pdsfiles(pdsfiles,
                                                             exclusions)
-        exclusions |= set(PdsFile.logicals_for_pdsfiles(pdsfiles))
+        exclusions |= set(Pds3File.logicals_for_pdsfiles(pdsfiles))
 
     page['associations'] = associations
 
@@ -1857,6 +1863,23 @@ def set_filter():
 
     return redirect(new_url)
 
+# The following routes will only be activated in a test environment, because
+# in a production environment the Apache server will catch these URLs before
+# they get to Viewmaster and serve the directly. They are included here so
+# that Viewmaster can be tested without an Apache server running.
+
+@app.route('/icons-local/<path:query_path>')
+def return_icons_local(query_path):
+    return send_file(f'icons-local/{query_path}', mimetype='image/png')
+
+@app.route('/holdings/<path:query_path>')
+def return_holdings_local(query_path):
+    return send_file(f'{HOLDINGS_PATHS[0]}/{query_path}', mimetype='text/plain')
+
+@app.route('/feedback/<path:query_path>')
+def return_feedback(query_path):
+    return redirect(f'https://pds-rings.seti.org/feedback/{query_path}')
+
 ################################################################################
 ################################################################################
 ################################################################################
@@ -1898,13 +1921,14 @@ def viewmaster(query_path):
     # Generate page
     query_pdsfile = None
     start_time = datetime.datetime.now()
-    pdsfile.pause_caching()
+    # pdsfile.pause_caching()   # XXX NEEDS TO BE UPDATED
 
     stacktrace = True
     try:
         # Interpret the query
         must_exist = '.tab/' not in query_path.lower()
-        query_pdsfile = PdsFile.from_path(query_path, must_exist=must_exist)
+        query_pdsfile = pdsfile.Pds3File.from_path(query_path,
+                                                   must_exist=must_exist)
 
         if not query_pdsfile.is_index_row and not query_pdsfile.exists:
             raise IOError('Unidentified PdsFile failure')
@@ -1937,9 +1961,7 @@ def viewmaster(query_path):
 
         html = response
         if TRIM_HTML:
-            len1 = len(html)
             html = trim_html(html)
-            len2 = len(html)
 
         if PAGE_CACHE:
             PAGE_CACHE[key] = zlib.compress(html.encode('utf-8', 'ignore'))
@@ -1979,7 +2001,8 @@ def viewmaster(query_path):
         return render_template('error.html', query_parts=query_parts), 404
 
     finally:
-        pdsfile.resume_caching()
+        pass
+        # pdsfile.resume_caching()  # XXX NEEDS TO BE UPDATED
 
 ################################################################################
 # Use /viewmaster/--build-cache to cache all the pdsdata volumes down to their
@@ -2050,17 +2073,17 @@ def fill_page_cache():
     unversioned_volset_pdsfiles = []
     versioned_volset_pdsfiles = []
     for voltype in ('volumes', 'calibrated', 'previews', 'diagrams'):
-        voltype_pdsf = PdsFile.from_logical_path(voltype)
+        voltype_pdsf = Pds3File.from_logical_path(voltype)
         _ = viewmaster(voltype)
 
         for volset_name in voltype_pdsf.childnames:
-          volset_pdsf = voltype_pdsf.child(volset_name)
-          _ = viewmaster(volset_pdsf.logical_path)
+            volset_pdsf = voltype_pdsf.child(volset_name)
+            _ = viewmaster(volset_pdsf.logical_path)
 
-          if '_v' in volset_name:
-            versioned_volset_pdsfiles.append(volset_pdsf)
-          else:
-            unversioned_volset_pdsfiles.append(volset_pdsf)
+            if '_v' in volset_name:
+                versioned_volset_pdsfiles.append(volset_pdsf)
+            else:
+                unversioned_volset_pdsfiles.append(volset_pdsf)
 
     for volset_pdsf in unversioned_volset_pdsfiles + versioned_volset_pdsfiles:
         for volume_name in volset_pdsf.childnames:
@@ -2175,9 +2198,7 @@ def trim_html(html):
 
 ################################################################################
 
-print(__name__)
 if __name__ == "__main__":
-    print('X')
-    app.run(host='0.0.0.0', port=8080)#, debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=True)
 
 ################################################################################

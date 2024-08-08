@@ -15,9 +15,6 @@ def dirs_only(parent_pdsfile, basename):
     child_pdsfile = parent_pdsfile.child(basename)
     return child_pdsfile.isdir
 
-def same_in_next_anchor(parent_pdsfile, basename):
-    parts = pdsfile.PdsFile.from_logical_path(self.current_logical_path).split()
-    return basename.endswith(parts[1] + parts[2])
 
 ################################################################################
 # Cache
