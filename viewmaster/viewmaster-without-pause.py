@@ -35,7 +35,7 @@ app.secret_key = "Cassini Grand Finale!"    # needed by flask_wtf
 ################################################################################
 # These are defined in viewmaster_config.py. Values shown here are examples.
 #     LOCALHOST_ = '/'
-#     VIEWMASTER_PREFIX_ = LOCALHOST_ + 'viewmaster/' 
+#     VIEWMASTER_PREFIX_ = LOCALHOST_ + 'viewmaster/'
 #     WEBSITE_HTTP_HOME = 'https://pds-rings.seti.org'
 #     LOGNAME = 'pds.viewmaster.server'
 #     VIEWMASTER_MEMCACHE_PORT = '/var/tmp/memcached.socket'
@@ -77,7 +77,7 @@ ICON_URL_  = '/icons-local/'
 ICON_COLOR = 'blue'
 
 PDS = '//pds.nasa.gov'
-SET_FILTER = VIEWMASTER_PREFIX_ + 'set_filter' 
+SET_FILTER = VIEWMASTER_PREFIX_ + 'set_filter'
 TRIM_HTML = True
 
 # Maximum number of pages in a multi-page directory view
@@ -136,13 +136,15 @@ VIEWABLE_EXTENSIONS = set([
 
 # We read:
 #   /usr/local/etc/httpd/httpd_customization.conf
+#   or
+#   /opt/homebrew/etc/httpd/httpd_customization.conf
 # for a line of the form:
 #   Define HOLDINGS_PATHS "path,path1,..."
 
 def get_holdings_paths():
     """Return the list of holdings directories."""
 
-    with open('/usr/local/etc/httpd/httpd_customization.conf') as f:
+    with open(HTTPD_CUSTOMIZATION) as f:
         recs = f.readlines()
 
     for rec in recs:
@@ -1381,7 +1383,7 @@ def product_page_html(query_pdsfile, params):
 
             maxlen = max([len(c) for c in query_pdsfile.column_names])
             for column_name in index_pdsfile.column_names:
-                rec = ['<font color="silver">', 
+                rec = ['<font color="silver">',
                        column_name,
                        (maxlen-len(column_name)) * ' ',
                        ' = "N/A"</font>']

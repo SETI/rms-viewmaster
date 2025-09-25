@@ -154,6 +154,7 @@ UNVIEWABLE_EXTENSIONS = set(['.zip', '.tar.gz', '.tar', '.tgz', '.jar'])
 
 # We read:
 #   /usr/local/etc/httpd/httpd_customization.conf
+#   /opt/homebrew/etc/httpd/httpd_customization.conf
 # or
 #   /etc/apache2/site-customization.conf
 # for a line of the form:
@@ -164,6 +165,10 @@ BOOT_TIME = psutil.boot_time()
 # XXX WHY DO WE ALLOW A LIST OF HOLDINGS PATHS INSTEAD OF A SINGLE PATH?
 def get_holdings_paths():
     """Return the list of holdings directories."""
+
+    print('xxxxxxx')
+    print(HTTPD_CUSTOMIZATION)
+
 
     pds3_env = os.getenv('PDS3_HOLDINGS_DIR')  # XXX PDS4
     if pds3_env is not None:
