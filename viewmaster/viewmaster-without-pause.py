@@ -134,12 +134,7 @@ VIEWABLE_EXTENSIONS = set([
 # Fill in HOLDINGS_PATHS, a list of absolute paths to the "holdings" directories
 ################################################################################
 
-# We read:
-#   /usr/local/etc/httpd/httpd_customization.conf
-#   or
-#   /opt/homebrew/etc/httpd/httpd_customization.conf
-# for a line of the form:
-#   Define HOLDINGS_PATHS "path,path1,..."
+# We get the holdings path from PDS3_HOLDIGNS environment variable
 
 def get_holdings_paths():
     """Return the list of holdings directories."""
@@ -149,30 +144,6 @@ def get_holdings_paths():
         return [pds3_holdings_dir]
     else:
         raise IOError("'PDS3_HOLDINGS' environment variable not set")
-
-    # with open(HTTPD_CUSTOMIZATION) as f:
-    #     recs = f.readlines()
-
-    # for rec in recs:
-
-    #     # Skip any line that does not start with "Define HOLDINGS_PATHS"
-    #     parts = rec.split()
-    #     if len(parts) < 3: continue
-    #     if parts[0] != 'Define': continue
-    #     if parts[1] != 'HOLDINGS_PATHS': continue
-
-    #     value = parts[2]
-
-    #     # Remove surrounding quotes, if any
-    #     if value[0] == '"':
-    #         value = value[1:-1]
-
-    #     # Split by commas
-    #     abspaths = value.split(',')
-    #     abspaths = [p.strip() for p in abspaths]
-    #     return abspaths
-
-    # raise IOError('HOLDINGS_PATHS not found in httpd_customization.conf')
 
 # This code is preserved just in case we ever need it again. It searches for
 # attached drives in the /Volumes directory that have names beginning with
@@ -303,7 +274,6 @@ LOGGER.info('Starting Viewmaster', info_logfile)
 try:
     paths = get_holdings_paths()
     paths = validate_holdings_paths(paths)
-    # paths = create_holdings_symlinks(paths)
 except Exception as e:
     LOGGER.exception(e)
     sys.exit(1)
