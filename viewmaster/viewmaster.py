@@ -166,10 +166,6 @@ BOOT_TIME = psutil.boot_time()
 def get_holdings_paths():
     """Return the list of holdings directories."""
 
-    print('xxxxxxx')
-    print(HTTPD_CUSTOMIZATION)
-
-
     pds3_env = os.getenv('PDS3_HOLDINGS_DIR')  # XXX PDS4
     if pds3_env is not None:
         return [pds3_env]
