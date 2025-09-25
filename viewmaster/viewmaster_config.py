@@ -7,12 +7,7 @@ import platform
 import socket
 import sys
 
-# Test for a command line run
-# VIEWMASTER_TESTING = ('flask' in sys.argv[0] or 'ipython' in sys.argv[0])  # XXX WRONG
-# VIEWMASTER_FOR_MARK = ('mark' in socket.gethostname().lower() or  # XXX OUTDATED
-#                        'local' in socket.gethostname().lower())
-
-# VIEWMASTER_TESTING = True  # XXX
+# Test for a command line run, sudo python viewmaster/viewmaster.py
 VIEWMASTER_TESTING = 'viewmaster.py' in sys.argv[0]
 
 # For command-line testing and development
@@ -25,18 +20,6 @@ if VIEWMASTER_TESTING:
     PDSFILE_MEMCACHE_PORT = 0
     MAKE_SYMLINKS = False
     PAGE_CACHING = False
-
-# For testing on mark.local
-# elif VIEWMASTER_FOR_MARK:
-#     LOCALHOST_ = 'https://mark.local/'
-#     VIEWMASTER_PREFIX_ = 'https://mark.local/viewmaster/'
-#     WEBSITE_HTTP_HOME = 'https://mark.local'
-#     LOGNAME = 'pds.viewmaster.local'
-#     VIEWMASTER_MEMCACHE_PORT = '/var/tmp/memcached.socket'
-#     PDSFILE_MEMCACHE_PORT = '/var/tmp/memcached.socket'
-#     MAKE_SYMLINKS = True
-#     PAGE_CACHING = False
-
 # As deployed
 else:
     LOCALHOST_ = '/'
@@ -61,13 +44,15 @@ else:
     else:
         VIEWMASTER_MEMCACHE_PORT = '/var/tmp/memcached.socket'
         PDSFILE_MEMCACHE_PORT = '/var/tmp/memcached.socket'
-    WEBSITE_ROOT_ = '/Library/WebServer/'
-    DOCUMENT_ROOT_ = '/Library/WebServer/Documents/'
-    LOG_ROOT_PREFIX_ = '/Library/WebServer/Logs/webapps/'
+
     if os.path.isdir('/usr/local/etc/httpd'):
         HTTPD_CUSTOMIZATION = '/usr/local/etc/httpd/httpd_customization.conf'
     else:
         HTTPD_CUSTOMIZATION = '/opt/homebrew/etc/httpd/httpd_customization.conf'
+
+    WEBSITE_ROOT_ = '/Library/WebServer/'
+    DOCUMENT_ROOT_ = '/Library/WebServer/Documents/'
+    LOG_ROOT_PREFIX_ = '/Library/WebServer/Logs/webapps/'
     EXTRA_LOCAL_IP_ADDRESS_A_B_C = None
 
 USE_SHELVES_ONLY = False
