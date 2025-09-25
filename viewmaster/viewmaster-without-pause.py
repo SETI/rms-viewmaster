@@ -144,29 +144,35 @@ VIEWABLE_EXTENSIONS = set([
 def get_holdings_paths():
     """Return the list of holdings directories."""
 
-    with open(HTTPD_CUSTOMIZATION) as f:
-        recs = f.readlines()
+    pds3_holdings_dir = os.getenv('PDS3_HOLDINGS')  # XXX PDS4
+    if pds3_holdings_dir is not None:
+        return [pds3_holdings_dir]
+    else:
+        raise IOError("'PDS3_HOLDINGS' environment variable not set")
 
-    for rec in recs:
+    # with open(HTTPD_CUSTOMIZATION) as f:
+    #     recs = f.readlines()
 
-        # Skip any line that does not start with "Define HOLDINGS_PATHS"
-        parts = rec.split()
-        if len(parts) < 3: continue
-        if parts[0] != 'Define': continue
-        if parts[1] != 'HOLDINGS_PATHS': continue
+    # for rec in recs:
 
-        value = parts[2]
+    #     # Skip any line that does not start with "Define HOLDINGS_PATHS"
+    #     parts = rec.split()
+    #     if len(parts) < 3: continue
+    #     if parts[0] != 'Define': continue
+    #     if parts[1] != 'HOLDINGS_PATHS': continue
 
-        # Remove surrounding quotes, if any
-        if value[0] == '"':
-            value = value[1:-1]
+    #     value = parts[2]
 
-        # Split by commas
-        abspaths = value.split(',')
-        abspaths = [p.strip() for p in abspaths]
-        return abspaths
+    #     # Remove surrounding quotes, if any
+    #     if value[0] == '"':
+    #         value = value[1:-1]
 
-    raise IOError('HOLDINGS_PATHS not found in httpd_customization.conf')
+    #     # Split by commas
+    #     abspaths = value.split(',')
+    #     abspaths = [p.strip() for p in abspaths]
+    #     return abspaths
+
+    # raise IOError('HOLDINGS_PATHS not found in httpd_customization.conf')
 
 # This code is preserved just in case we ever need it again. It searches for
 # attached drives in the /Volumes directory that have names beginning with
@@ -297,7 +303,7 @@ LOGGER.info('Starting Viewmaster', info_logfile)
 try:
     paths = get_holdings_paths()
     paths = validate_holdings_paths(paths)
-    paths = create_holdings_symlinks(paths)
+    # paths = create_holdings_symlinks(paths)
 except Exception as e:
     LOGGER.exception(e)
     sys.exit(1)
