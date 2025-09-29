@@ -35,7 +35,6 @@ if platform.system() == 'Linux':
     WEBSITE_ROOT_ = '/var/www/'
     DOCUMENT_ROOT_ = '/var/www/documents/'
     LOG_ROOT_PREFIX_ = '/var/www/logs/webapps/'
-    HTTPD_CUSTOMIZATION = '/etc/apache2/site-customization.conf'
     EXTRA_LOCAL_IP_ADDRESS_A_B_C = '10.1.10.'
 else:
     if VIEWMASTER_TESTING:
@@ -44,11 +43,6 @@ else:
     else:
         VIEWMASTER_MEMCACHE_PORT = '/var/tmp/memcached.socket'
         PDSFILE_MEMCACHE_PORT = '/var/tmp/memcached.socket'
-
-    if os.path.isdir('/usr/local/etc/httpd'):
-        HTTPD_CUSTOMIZATION = '/usr/local/etc/httpd/httpd_customization.conf'
-    else:
-        HTTPD_CUSTOMIZATION = '/opt/homebrew/etc/httpd/httpd_customization.conf'
 
     WEBSITE_ROOT_ = '/Library/WebServer/'
     DOCUMENT_ROOT_ = '/Library/WebServer/Documents/'

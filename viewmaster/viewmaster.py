@@ -152,13 +152,7 @@ UNVIEWABLE_EXTENSIONS = set(['.zip', '.tar.gz', '.tar', '.tgz', '.jar'])
 # Fill in HOLDINGS_PATHS, a list of absolute paths to the "holdings" directories
 ################################################################################
 
-# We read:
-#   /usr/local/etc/httpd/httpd_customization.conf
-#   /opt/homebrew/etc/httpd/httpd_customization.conf
-# or
-#   /etc/apache2/site-customization.conf
-# for a line of the form:
-#   Define HOLDINGS_PATHS "path,path1,..."
+# We get the holdings path from PDS3_HOLDIGNS environment variable
 
 BOOT_TIME = psutil.boot_time()
 
