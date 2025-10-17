@@ -208,3 +208,50 @@ October 2025
   - `sort_tables()`, `tables_from_pdsfiles()`, `merge_index_row_tables()`.
 
 ---
+
+## `pdsiterator.py`
+
+### Overview
+`pdsiterator.py` provides three main iterator classes for navigating through PDS file structures.
+
+### Key Components and Functionality
+- **PdsDirIterator** (lines 29-144)
+    - **Purpose**: Iterates across related directories, jumping into adjacent directories and parallel volumes
+    - **Key Features**:
+        - Uses a global `DIRECTORY_CACHE` to optimize performance by caching directory listings
+        - Supports both forward and backward iteration (via `sign` parameter)
+        - Handles case-insensitive path matching
+        - Returns tuples of `(logical_path, display_path, level)` where:
+            - `level = 0`: same directory level
+            - `level = 1`: different directory level
+        - Uses `pdsfile.NEIGHBORS` to find related directories using fnmatch patterns
+
+- **PdsFileIterator** (lines 150-268)
+    - **Purpose**: Iterates through files within directories, with support for jumping to adjacent directories when needed
+    - **Key Features**:
+        - Supports pattern matching and filtering of file names
+        - Can exclude files based on patterns
+        - Supports custom filter functions
+        - Handles "cousin" navigation (jumping to adjacent parent directories)
+        - Returns tuples with level indicators:
+            - `level = 0`: sibling files (same directory)
+            - `level = 1`: cousin files (different directory)
+
+- **PdsRowIterator** (lines 274-336)
+    - **Purpose**: Simple iterator for files within a single directory (siblings only)
+    - **Key Features**:
+        - More lightweight than `PdsFileIterator`
+        - Only iterates within the same parent directory
+        - Always returns `level = 0` since it doesn't cross directory boundaries
+
+- **Utility Functions:**
+    - **`dirs_only()`** (lines 12-16): Filter function that only returns directories
+
+- **Key Design Patterns:**
+    1. **Caching**: Uses `DIRECTORY_CACHE` to avoid repeated expensive directory operations
+    2. **Case-insensitive matching**: All path comparisons are done in lowercase
+    3. **Iterator protocol**: All classes implement `__iter__()`, `__next__()`, and `next()` methods
+    4. **Cloning**: Each iterator has a `copy()` method for creating reversed or modified versions
+    5. **Flexible navigation**: Supports both forward (`sign=1`) and backward (`sign=-1`) iteration
+
+---
