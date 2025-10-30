@@ -7,3 +7,7 @@ rms-pdsfile
 rms-pdslogger
 rms-pdstable
 rms-translator
+myst-parser
+sphinx
+sphinxcontrib-napoleon
+sphinx-rtd-theme

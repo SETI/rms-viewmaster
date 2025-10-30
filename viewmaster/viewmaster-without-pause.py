@@ -139,11 +139,11 @@ VIEWABLE_EXTENSIONS = set([
 def get_holdings_paths():
     """Return the list of holdings directories."""
 
-    pds3_holdings_dir = os.getenv('PDS3_HOLDINGS')  # XXX PDS4
+    pds3_holdings_dir = os.getenv('PDS3_HOLDINGS_DIR')  # XXX PDS4
     if pds3_holdings_dir is not None:
         return [pds3_holdings_dir]
     else:
-        raise IOError("'PDS3_HOLDINGS' environment variable not set")
+        raise IOError("'PDS3_HOLDINGS_DIR' environment variable not set")
 
 # This code is preserved just in case we ever need it again. It searches for
 # attached drives in the /Volumes directory that have names beginning with
