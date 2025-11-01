@@ -408,7 +408,7 @@ def load_infopage_content(page_pdsfile, hrefs=True):
     recognized file references found via `internal_link_info` metadata.
 
     Args:
-        page_pdsfile (Pds3File): PDS file representing the info page.
+        page_pdsfile (Pds3File): PdsFile instance representing the info page.
         hrefs (bool): If True, insert anchor tags for recognized filenames.
 
     Returns:
@@ -509,12 +509,12 @@ def load_infopage_content(page_pdsfile, hrefs=True):
 def get_prev_next_navigation(query_pdsfile):
     """Compute neighbors for navigation before and after a target file/dir.
 
-    The item itself is included as the first element in each list. List sizes
+    The target file/dir itself is included as the first element in each list. List sizes
     and text lengths are constrained by `MAX_NAV_COUNT` and `MAX_NAV_STRLEN`.
 
     Args:
-        query_pdsfile (Pds3File): The file or directory around which to build
-            navigation.
+        query_pdsfile (Pds3File): PdsFile instance (a file or directory) around which to
+            build navigation.
 
     Returns:
         tuple[list[Pds3File], list[Pds3File]]: Two lists `(prev, next)` where
@@ -622,13 +622,13 @@ def get_prev_next_navigation(query_pdsfile):
 ################################################################################
 
 def list_next_pdsfiles(query_pdsfile):
-    """List up to `MAX_PAGES` forward neighbors from a starting item.
+    """List up to `MAX_PAGES` forward neighbors from a starting target file/dir.
 
     Args:
         query_pdsfile (Pds3File): Starting file or directory.
 
     Returns:
-        list[Pds3File]: Starting item followed by forward neighbors.
+        list[Pds3File]: Starting target file or directory followed by forward neighbors.
     """
 
     siblings = [query_pdsfile]
@@ -757,10 +757,10 @@ def fill_table_navigation_links(page, params):
 ################################################################################
 
 def get_parallels(query_pdsfile):
-    """Find parallel items in other trees and versions for an item.
+    """Find parallel files/dirs in other trees and versions for a target file/dir.
 
     Args:
-        query_pdsfile (Pds3File): The reference file or directory.
+        query_pdsfile (Pds3File): The target file or directory.
 
     Returns:
         dict[str, Pds3File|None]: Mapping of category/version keys to parallels,
@@ -822,7 +822,7 @@ SAFE_FILTER_REGEX = re.compile(r'^\w+\*(|\.*)$', re.I)
 SAFE_FILTER_CATEGORIES = ('volumes', 'previews', 'diagrams', 'calibrated')
 
 def fill_parallels_navigation_links(page, params):
-    """Populate `webapp_link` for items in the `parallels` map.
+    """Populate `webapp_link` for files/dirs in the `parallels` map.
 
     Includes the filter when safe for same-depth categories.
 
@@ -929,6 +929,8 @@ def fill_option_links(page, params):
 
 def get_directory_page(query_pdsfile):
     """Assemble the `page` dictionary for a directory view.
+
+    The dictionary includes various info for rendering the target dir.
 
     Args:
         query_pdsfile (Pds3File): Directory to display.
@@ -1226,11 +1228,13 @@ def directory_page_html(query_pdsfile, params):
 def get_product_page_info(query_pdsfile):
     """Assemble the `page` dictionary for a product view.
 
+    The dictionary includes various info for rendering the target file.
+
     Args:
         query_pdsfile (Pds3File): File (or index row) to display.
 
     Returns:
-        dict: Page dictionary ready for rendering (without templates applied).
+        dict: Page dictionary ready for rendering a product.
     """
 
     page = {}
@@ -1608,7 +1612,7 @@ def format_row_value(value, mask, add_comment=True):
     value can be included as an HTML comment.
 
     Args:
-        value (Any): The value or tuple of values.
+        value (Any): The index-row value or tuple of values.
         mask (bool|sequence[bool]): Mask flag(s) for the value(s).
         add_comment (bool): Whether to include the unmasked value as a comment.
 
@@ -1988,11 +1992,10 @@ def url_params(params, selection=None):
 
 FILTER_REGEX = re.compile(r'^(\w+|\?+|\*+|\-+|\.|\[(\w+|\-)+])+$')
 
-def pattern_validator(form, field):
+def pattern_validator(field):
     """WTForms validator for the file-name filter pattern.
 
     Args:
-        form (FlaskForm): Parent form.
         field (wtforms.Field): Field being validated.
 
     Raises:
