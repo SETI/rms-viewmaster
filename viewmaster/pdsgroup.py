@@ -1,9 +1,11 @@
-################################################################################
-# File grouping class. An ordered set of PdsFiles, some of which may be hidden.
-# They must share a common parent and anchor. In Viewmaster, they appear on the
-# same row of a table, where a row boundaries are identified by transition
-# between gray and white.
-################################################################################
+"""Grouping utilities for PDS files displayed in Viewmaster.
+
+This module defines file grouping class `PdsGroup`, an ordered collection of PdsFiles
+that share the same parent directory and anchor. In Viewmaster, the members of a
+`PdsGroup` are rendered on the same row of a table (e.g., a product and its label),
+where a row boundaries are identified by transition between gray and white.
+Individual members can be hidden from display while remaining in the group.
+"""
 
 import os
 import pdsfile.pdsviewable as pdsviewable
@@ -18,23 +20,33 @@ class PdsGroup(object):
 
     At any given time, one or more members of the group may be "hidden", in
     which case the default PdsGroup iterator will skip over them.
+
+    Attributes:
+        parent_pdsf: Parent `Pds3File` (False until initialized; None for
+            merged directories).
+        anchor (str|None): Group anchor derived from the first member unless
+            explicitly set.
+        rows (list): Ordered list of member PdsFiles.
+        hidden (set[str]): Logical paths of members hidden from default views.
     """
 
     def __init__(self, pdsfiles=[], parent=False, anchor=None, hidden=[]):
         """PdsGroup constructor.
 
-        Input:
-            pdsfiles        an ordered list of PdsFiles. Can be empty, which
-                            means the PdsGroup does not yet have any members.
-            parent          the common parent of all the PdsFiles. False to
-                            derive this from the pdsfiles. None means that the
-                            parent is a merged directory.
-            anchor          a string referring to this PdsGroup, which should
-                            be unique within the directory. None for default,
-                            which is derived from the basename of the first file
-                            in the group.
-            hidden          a list or set of the logical paths of rows that are
-                            to be treated as hidden. Default is an empty list.
+        Args:
+            pdsfiles (list|tuple|Pds3File): An ordered list of PdsFiles. Can be empty,
+                which means the PdsGroup does not yet have any members.
+            parent (Pds3File|bool|None): The common parent of all the PdsFiles.
+                False means to derive this from the pdsfiles. None means that the parent
+                is a merged directory.
+            anchor (str|None): A string referring to this PdsGroup, which should
+                be unique within the directory. None for default, which is derived from
+                the basename of the first file in the group.
+            hidden (list|set): A list or set of the logical paths of rows that are
+                to be treated as hidden. Default is an empty list.
+
+        Returns:
+            None
         """
 
         self.parent_pdsf = parent   # False means un-initialized, in which case
@@ -58,9 +70,21 @@ class PdsGroup(object):
             self.append(pdsfiles)
 
     def __len__(self):
+        """Number of visible members in the group.
+
+        Returns:
+            int: Count of non-hidden members.
+        """
+
         return len(self.rows) - len(self.hidden)
 
     def __repr__(self):
+        """Debug representation of the group.
+
+        Returns:
+            str: Representation with first member path and count.
+        """
+
         if self.rows:
             path = self.rows[0].logical_path
 
@@ -72,6 +96,12 @@ class PdsGroup(object):
             return f'PdsGroup()'
 
     def copy(self):
+        """Create a shallow copy of the group, preserving metadata.
+
+        Returns:
+            PdsGroup: A new group with the same members and flags.
+        """
+
         this = PdsGroup()
         this.parent_pdsf = self.parent_pdsf
         this.anchor = self.anchor
@@ -88,7 +118,11 @@ class PdsGroup(object):
 
     @property
     def parent_logical_path(self):
-        """Logical path of the parent."""
+        """Logical path of the parent directory.
+
+        Returns:
+            str: Parent logical path or empty string if unknown.
+        """
 
         if self.parent_pdsf:
             return self.parent_pdsf.logical_path
@@ -97,6 +131,11 @@ class PdsGroup(object):
 
     @property
     def isdir(self):
+        """Whether any member of the group is a directory.
+
+        Returns:
+            bool: True if at least one member is a directory.
+        """
         if self._isdir_filled is None:
             self._isdir_filled = any([p.isdir for p in self.rows])
 
@@ -105,7 +144,11 @@ class PdsGroup(object):
     @property
     def _iconset(self):
         """Internal method to return the PdsViewSet of this object's icon,
-        whether it is to be displayed in a closed or open state."""
+        whether it is to be displayed in a closed or open state.
+
+        Returns:
+            pdsviewable.PdsViewSet: The default (closed) icon set.
+        """
 
         if self._iconset_filled:
             return self._iconset_filled[False]
@@ -141,16 +184,24 @@ class PdsGroup(object):
 
     @property
     def iconset_closed(self):
-        """The "closed" or default icon set for this group. Folders typically
+        """The closed/default icon set for the group. Folders typically
         have a different icon when open vs. when closed; for documents, the
-        "open" and "closed" icons are usually the same."""
+        "open" and "closed" icons are usually the same.
+
+        Returns:
+            pdsviewable.PdsViewSet: Closed icon set.
+        """
 
         _ = self._iconset
         return self._iconset_filled[False]
 
     @property
     def iconset_open(self):
-        """The "open" icon set for this group."""
+        """The open icon set for the group.
+
+        Returns:
+            pdsviewable.PdsViewSet: Open icon set.
+        """
 
         _ = self._iconset
         return self._iconset_filled[True]
@@ -158,6 +209,11 @@ class PdsGroup(object):
     @property
     def viewset(self):
         """The local PdsViewSet if it exists; otherwise, the first PdsViewSet.
+
+        Returns:
+            pdsviewable.PdsViewSet|bool: Local viewset if all members are
+            viewable; otherwise, the first available member viewset; False if
+            none.
         """
 
         if self._viewset_filled is None:
@@ -177,6 +233,9 @@ class PdsGroup(object):
     @property
     def local_viewset(self):
         """The PdsViewSet of this object if it is viewable; False otherwise.
+
+        Returns:
+            pdsviewable.PdsViewSet|bool: Combined viewset or False.
         """
 
         if self._local_viewset_filled is None:
@@ -196,6 +255,9 @@ class PdsGroup(object):
     @property
     def all_viewsets(self):
         """A dictionary of all the PdsViewSets for this object.
+
+        Returns:
+            dict[str, pdsviewable.PdsViewSet]: Merged mapping of viewsets.
         """
 
         if self._all_viewsets_filled is None:
@@ -212,7 +274,14 @@ class PdsGroup(object):
 
     @property
     def global_anchor(self):
-        """A globally unique anchor string for this group."""
+        """A globally unique anchor for this group.
+
+        Returns:
+            str: Global anchor string.
+
+        Raises:
+            ValueError: If the group has not been initialized.
+        """
 
         if self.parent_pdsf is False:
             raise ValueError('PdsGroup has not been initialized')
@@ -224,7 +293,17 @@ class PdsGroup(object):
 
     def sort(self, labels_after=None, dirs_first=None, dirs_last=None,
                    info_first=None):
-        """Sort the rows of this group."""
+        """Sort the rows of this group.
+
+        Args:
+            labels_after (bool|None): Place labels after their targets.
+            dirs_first (bool|None): Sort directories before files.
+            dirs_last (bool|None): Sort directories after files.
+            info_first (bool|None): Prioritize info files.
+
+        Returns:
+            None
+        """
 
         basename_dict = {pdsf.basename:pdsf for pdsf in self.rows}
 
@@ -268,7 +347,17 @@ class PdsGroup(object):
 
     def sort(self, labels_after=None, dirs_first=None, dirs_last=None,
                    info_first=None):
-        """Sort the rows of this group."""
+        """Sort member files by parent-defined rules with tweaks for labels.
+
+        Args:
+            labels_after (bool|None): Place labels after their targets.
+            dirs_first (bool|None): Sort directories before files.
+            dirs_last (bool|None): Sort directories after files.
+            info_first (bool|None): Prioritize info files.
+
+        Returns:
+            None
+        """
 
         basename_dict = {pdsf.basename:pdsf for pdsf in self.rows}
 
@@ -312,7 +401,18 @@ class PdsGroup(object):
         self.rows = [basename_dict[key] for key in sorted]
 
     def append(self, pdsf, hidden=False):
-        """Add the given PdsFile to this group."""
+        """Append a PdsFile to the group, ensuring parent and anchor match.
+
+        Args:
+            pdsf: PdsFile to add.
+            hidden (bool): If True, mark as hidden.
+
+        Raises:
+            ValueError: If parent or anchor do not match the group's.
+
+        Returns:
+            None
+        """
 
         # Initialize if necessary
         if self.parent_pdsf is False:
@@ -351,7 +451,13 @@ class PdsGroup(object):
 
     def remove(self, pdsf):
         """Remove the PdsFile from this PdsGroup. Return True if the PdsFile
-        was removed, False if it is not a member.
+        was removed, False if it is not a member.Remove a PdsFile from the group.
+
+        Args:
+            pdsf: PdsFile to remove.
+
+        Returns:
+            bool: True if removed; False if not a member.
         """
 
         for k in range(len(self.rows)):
@@ -366,6 +472,12 @@ class PdsGroup(object):
     def hide(self, pdsf):
         """Hide the PdsFile in this PdsGroup. Return True if the PdsFile was
         hidden, False if it is not a member.
+
+        Args:
+            pdsf: PdsFile to hide.
+
+        Returns:
+            bool: True if newly hidden; False if not a member or already hidden.
         """
 
         for k in range(len(self.rows)):
@@ -377,7 +489,11 @@ class PdsGroup(object):
         return False
 
     def hide_all(self):
-        """Hide all the PdsFiles in this PdsGroup."""
+        """Hide all the PdsFiles in this PdsGroup.
+
+        Returns:
+            None
+        """
 
         paths = [f.logical_path for f in self.rows]
         self.hidden = set(paths)
@@ -385,6 +501,12 @@ class PdsGroup(object):
     def unhide(self, pdsf):
         """Unhide the PdsFile in this PdsGroup. Return True if the PdsFile was
         un-hidden, False if it is not a member.
+
+        Args:
+            pdsf: PdsFile to unhide.
+
+        Returns:
+            bool: True if visibility changed; False otherwise.
         """
 
         for k in range(len(self.rows)):
@@ -396,19 +518,35 @@ class PdsGroup(object):
         return False
 
     def unhide_all(self):
-        """Un-hide all the PdsFiles in this PdsGroup."""
+        """Un-hide all the PdsFiles in this PdsGroup.
+
+        Returns:
+            None
+        """
         self.hidden = set()
 
     def iterator(self):
-        """List of the rows of this PdsGroup, skipping hidden members."""
+        """List of the rows of this PdsGroup, skipping hidden members.
+
+        Returns:
+            list: Members excluding those marked hidden.
+        """
         return [r for r in self.rows if r.logical_path not in self.hidden]
 
     def iterator_for_all(self):
-        """Iterator for the rows of this PdsGroup, hidden or not."""
+        """Iterator for the rows of this PdsGroup, hidden or not.
+
+        Returns:
+            list: All members.
+        """
         return [r for r in self.rows]
 
     def iterator_for_hidden(self):
-        """List of the hidden rows of this PdsGroup."""
+        """List of the hidden rows of this PdsGroup.
+
+        Returns:
+            list: Hidden members.
+        """
         return [r for r in self.rows if r.logical_path in self.hidden]
 
     ############################################################################
@@ -417,7 +555,15 @@ class PdsGroup(object):
 
     @staticmethod
     def group_children(pdsf, basenames=None):
-        """Return children of this PdsFile as a list of PdsGroup objects."""
+        """Group a directory's children by anchor into a list of PdsGroup objects.
+
+        Args:
+            pdsf: Parent PdsFile whose children to group.
+            basenames (list|None): Optional subset of basenames to include.
+
+        Returns:
+            list[PdsGroup]: Groups of related files ordered by parent rules.
+        """
 
         if basenames is None:
             basenames = pdsf.childnames
