@@ -1,7 +1,17 @@
-################################################################################
-# pdsiterator.py: PdsIterator class iterates across related files, jumping
-#   into adjacent directories and parallel volumes when required.
-################################################################################
+"""Iterator classes for navigating related PDS files and directories.
+
+This module provides three iterator classes for traversing PdsFile structures:
+- `PdsDirIterator`: Iterates across related directories, jumping into adjacent
+  directories and parallel volumes when required.
+- `PdsFileIterator`: Iterates through files within directories, with support
+  for jumping to adjacent directories when needed.
+- `PdsRowIterator`: Simple iterator for files within a single directory
+  (siblings only). It's used for index row navigation where each row is a sibling in
+  the same table.
+
+All iterators support both forward and backward iteration and can navigate
+across directory boundaries when configured to do so.
+"""
 
 import os
 import fnmatch
@@ -10,6 +20,16 @@ import pdslogger
 
 # Useful filters
 def dirs_only(parent_pdsfile, basename):
+    """Filter function that only returns directories.
+
+    Args:
+        parent_pdsfile: Parent PdsFile object, or None.
+        basename (str): Basename of the child to check.
+
+    Returns:
+        bool: True if the child is a directory (or if parent is None);
+            False otherwise.
+    """
     if parent_pdsfile is None: return True
 
     child_pdsfile = parent_pdsfile.child(basename)
@@ -27,8 +47,32 @@ DIRECTORY_CACHE = {}
 ################################################################################
 
 class PdsDirIterator(object):
+    """Iterator for navigating across related directories.
+
+    Iterates across related directories, jumping into adjacent directories and
+    parallel volumes when required. Uses a global directory cache to optimize
+    performance. Supports both forward and backward iteration.
+
+    Attributes:
+        neighbors (list): List of logical paths for neighboring directories.
+        neighbor_index (int): Current index in the neighbors list.
+        current_logical_path (str): Logical path of the current directory.
+        sign (int): Direction of iteration (+1 for forward, -1 for backward).
+        logger: Optional logger instance for debugging.
+    """
 
     def __init__(self, pdsf, sign=1, logger=None):
+        """Initialize a PdsDirIterator.
+
+        Args:
+            pdsf: PdsFile representing the starting directory. If None, creates
+                an empty iterator.
+            sign (int): Direction of iteration (+1 for forward, -1 for backward).
+            logger: Optional logger instance.
+
+        Returns:
+            None
+        """
 
         global DIRECTORY_CACHE
 
@@ -86,7 +130,15 @@ class PdsDirIterator(object):
         self.logger = logger
 
     def copy(self, sign=None):
-        """Return a clone of this iterator, possibly reversed."""
+        """Create a clone of this iterator, optionally with reversed direction.
+
+        Args:
+            sign (int|None): New direction (+1 forward, -1 backward). If None,
+                preserves the current direction.
+
+        Returns:
+            PdsDirIterator: A new iterator starting from the same position.
+        """
 
         if sign is None:
             sign1 = self.sign
@@ -103,13 +155,36 @@ class PdsDirIterator(object):
     ############################################################################
 
     def __iter__(self):
+        """Return the iterator object itself.
+
+        Returns:
+            PdsDirIterator: The iterator instance.
+        """
         return self
 
     def next(self):
+        """Python 2 compatibility wrapper for __next__.
+
+        Returns:
+            tuple: (logical_path, display_path, level)
+
+        Raises:
+            StopIteration: When iteration is complete.
+        """
         return self.__next__()
 
     def __next__(self):
-        """Iterator returns (logical_path, display path, level)"""
+        """Return the next neighbor directory in the iteration.
+
+        Returns:
+            tuple: A tuple (logical_path, display_path, level) where:
+                - logical_path (str): Full logical path of the neighbor.
+                - display_path (str): The string starting where 'prev' and 'this' differ
+                - level (int): 0 if same directory level, 1 if different level.
+
+        Raises:
+            StopIteration: When no more neighbors are available.
+        """
 
         prev_logical_path = self.current_logical_path
 
@@ -148,9 +223,43 @@ class PdsDirIterator(object):
 ################################################################################
 
 class PdsFileIterator(object):
+    """Iterator for navigating through files within and across directories.
+
+    Iterates through files within directories, with support for jumping to
+    adjacent directories (cousins) when needed. Supports pattern matching,
+    exclusion patterns, and custom filter functions.
+
+    Attributes:
+        parent: Parent PdsFile of the starting file.
+        dir_iterator: PdsDirIterator for navigating parent directories.
+        pattern (str|None): Optional fnmatch pattern for file names.
+        exclude (str|None): Optional fnmatch exclusion pattern.
+        filter (callable|None): Optional custom filter function.
+        sign (int): Direction of iteration (+1 for forward, -1 for backward).
+        current_logical_path (str): Logical path of the current file.
+        sibnames (list): List of logical paths for sibling files.
+        sibnames_lc (list): Lowercase version of sibnames for case-insensitive
+            matching.
+        sibling_index (int): Current index in the sibling list.
+        logger: Optional logger instance.
+    """
 
     def __init__(self, pdsf, sign=1, pattern=None, exclude=None, filter=None,
                        logger=None):
+        """Initialize a PdsFileIterator.
+
+        Args:
+            pdsf: PdsFile representing the starting file.
+            sign (int): Direction of iteration (+1 for forward, -1 for backward).
+            pattern (str|None): Optional fnmatch pattern to match file names.
+            exclude (str|None): Optional fnmatch pattern to exclude file names.
+            filter (callable|None): Optional filter function taking
+                (parent_pdsfile, basename) and returning bool.
+            logger: Optional logger instance.
+
+        Returns:
+            None
+        """
 
         self.parent = pdsf.parent()
         self.dir_iterator = PdsDirIterator(self.parent, sign, logger=logger)
@@ -195,7 +304,14 @@ class PdsFileIterator(object):
         return this
 
     def _filter_names(self, basenames):
+        """Apply pattern matching, exclusion, and custom filters to basenames.
 
+        Args:
+            basenames (list): List of basenames to filter.
+
+        Returns:
+            list: Filtered list of basenames.
+        """
         if self.pattern:
             basenames = [s for s in basenames
                          if fnmatch.fnmatch(s, self.pattern)]
@@ -212,19 +328,38 @@ class PdsFileIterator(object):
     ############################################################################
 
     def __iter__(self):
+        """Return the iterator object itself.
+
+        Returns:
+            PdsFileIterator: The iterator instance.
+        """
         return self
 
     def next(self):
+        """Python 2 compatibility wrapper for __next__.
+
+        Returns:
+            tuple: (logical_path, display_path, level)
+
+        Raises:
+            StopIteration: When iteration is complete.
+        """
         return self.__next__()
 
     def __next__(self):
-        """Iterator returns (logical_path, display path, level of jump)
+        """Return the next file in the iteration, jumping to adjacent directories if needed.
 
-        Level of jump is 0 for a sibling, 1 for a cousin.
+        Returns:
+            tuple: A tuple (logical_path, display_path, level) where:
+                - logical_path (str): Full logical path of the file.
+                - display_path (str): The part of the path that has changed.
+                    At level 0, it is basename;
+                    At level 1, it is parent directory/basename;
+                - level (int): 0 for a sibling (same directory), 1 for a cousin
+                    (different directory).
 
-        Display path is the part of the path that has changed.
-            At level 0, it is basename;
-            At level 1, it is parent directory/basename;
+        Raises:
+            StopIteration: When no more files are available.
         """
 
         # Try to return the next sibling
@@ -245,7 +380,20 @@ class PdsFileIterator(object):
             return (sibname, os.path.basename(sibname), 0)
 
     def next_cousin(self):
-        """Move the iteration into the adjacent parent directory."""
+        """Move iteration to an adjacent parent directory and return the first file.
+
+        This method is called when the current directory's files are exhausted.
+        It navigates to the next/previous parent directory and loads its files.
+
+        Returns:
+            tuple: A tuple (logical_path, display_path, level=1) where:
+                - logical_path (str): Full logical path of the file.
+                - display_path (str): Parent directory path plus basename.
+                - level (int): Always 1 (cousin level).
+
+        Raises:
+            StopIteration: If no adjacent parent directory is available.
+        """
 
         prev_logical_path = self.current_logical_path
 
@@ -272,8 +420,34 @@ class PdsFileIterator(object):
 ################################################################################
 
 class PdsRowIterator(object):
+    """Simple iterator for files within a single directory (siblings only).
+
+    This iterator only navigates within the same parent directory and does not
+    cross directory boundaries. It's used for index row navigation where each
+    row is a sibling in the same table.
+
+    Attributes:
+        parent_pdsf: Parent PdsFile of the starting file.
+        parent_logical_path_ (str): Logical path of the parent with trailing '/'.
+        sign (int): Direction of iteration (+1 for forward, -1 for backward).
+        sibnames (list): List of basenames for sibling files.
+        sibnames_lc (list): Lowercase version of sibnames for case-insensitive
+            matching.
+        sibling_index (int): Current index in the sibling list.
+        logger: Optional logger instance.
+    """
 
     def __init__(self, pdsf, sign=1, logger=None):
+        """Initialize a PdsRowIterator.
+
+        Args:
+            pdsf: PdsFile representing the starting file (typically an index row).
+            sign (int): Direction of iteration (+1 for forward, -1 for backward).
+            logger: Optional logger instance.
+
+        Returns:
+            None
+        """
 
         self.parent_pdsf = pdsf.parent()
         self.parent_logical_path_ = self.parent_pdsf.logical_path + '/'
@@ -312,19 +486,40 @@ class PdsRowIterator(object):
     ############################################################################
 
     def __iter__(self):
+        """Return the iterator object itself.
+
+        Returns:
+            PdsRowIterator: The iterator instance.
+        """
         return self
 
     def next(self):
+        """Python 2 compatibility wrapper for __next__.
+
+        Returns:
+            tuple: (logical_path, display_path, level)
+
+        Raises:
+            StopIteration: When iteration is complete.
+        """
         return self.__next__()
 
     def __next__(self):
-        """Iterator returns (logical_path, display path, level of jump)
+        """Return the next sibling file in the iteration.
 
-        Level of jump is 0 for a sibling, 1 for a cousin.
+        This iterator only returns siblings (level 0) and does not cross
+        directory boundaries.
 
-        Display path is the part of the path that has changed.
-            At level 0, it is basename;
-            At level 1, it is parent directory/basename;
+        Returns:
+            tuple: A tuple (logical_path, display_path, level) where:
+                - logical_path (str): Full logical path of the sibling file.
+                - display_path (str): The part of the path that has changed.
+                    At level 0, it is basename;
+                    At level 1, it is parent directory/basename;
+                - level (int): Always 0 (sibling level).
+
+        Raises:
+            StopIteration: When no more siblings are available.
         """
 
         self.sibling_index += self.sign
