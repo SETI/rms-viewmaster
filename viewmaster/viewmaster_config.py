@@ -1,6 +1,35 @@
-################################################################################
-# viewmaster_config.py
-################################################################################
+"""Configuration module for Viewmaster web application.
+
+This module sets up environment-specific configuration for the Viewmaster Flask
+application. It detects whether Viewmaster is running in testing mode (command-line)
+or production mode, and sets appropriate paths, URLs, caching options, and logging
+configuration based on the platform (Linux vs macOS) and execution context.
+
+The module defines configuration variables that are imported by `viewmaster.py`:
+- URL prefixes and paths for localhost and web server
+- Memcache socket paths for page and PdsFile caching
+- Filesystem paths for documents, logs, and website root
+- Logging configuration names
+- Caching and symlink creation flags
+- Platform-specific IP address ranges
+
+Configuration Variables:
+    VIEWMASTER_TESTING (bool): True if running from command line.
+    LOCALHOST_ (str): Localhost URL prefix, typically '/'.
+    VIEWMASTER_PREFIX_ (str): Full URL prefix for Viewmaster routes.
+    WEBSITE_HTTP_HOME (str): Base URL for the website.
+    LOGNAME (str): Logger name for pdslogger.
+    VIEWMASTER_MEMCACHE_PORT (str|int): Memcache socket path or 0 to disable.
+    PDSFILE_MEMCACHE_PORT (str|int): Memcache socket path for PdsFile cache or 0.
+    MAKE_SYMLINKS (bool): Whether to create symlinks for holdings directories.
+    PAGE_CACHING (bool): Whether to enable page-level caching.
+    WEBSITE_ROOT_ (str): Root directory for website files.
+    DOCUMENT_ROOT_ (str): Root directory for document files.
+    LOG_ROOT_PREFIX_ (str): Root directory prefix for log files.
+    EXTRA_LOCAL_IP_ADDRESS_A_B_C (str|None): Additional local IP prefix for
+        cache building, or None.
+    USE_SHELVES_ONLY (bool): Whether to use shelves-only mode for Pds3File.
+"""
 
 import os
 import platform
