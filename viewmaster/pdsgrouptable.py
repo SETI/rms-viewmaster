@@ -1,15 +1,40 @@
-################################################################################
-# PdsGroupTable class. An ordered set of PdsGroups sharing a common parent.
-# Some may be hidden. These are grouped together within a single table in
-# Viewmaster.
-################################################################################
+"""Table utilities for organizing PdsGroups in Viewmaster.
+
+This module defines `PdsGroupTable`, an ordered collection of `PdsGroup`
+objects that share a common parent directory. In Viewmaster, a
+`PdsGroupTable` represents a single table section where groups are rendered
+as rows. Individual groups within a table can be hidden from display while
+remaining in the collection.
+"""
 
 import pdsfile
 import pdsgroup
 
 class PdsGroupTable(object):
+    """An ordered collection of PdsGroups sharing a common parent.
+
+    PdsGroupTable organizes groups of related PdsFiles into a single table
+    section. All groups must share the same parent directory. Groups can be
+    hidden, in which case the default iterator excludes them.
+
+    Attributes:
+        parent_pdsf: Parent `Pds3File` (False until initialized; None for
+            merged directories).
+        groups (list): Ordered list of `PdsGroup` objects.
+        _levels_filled (list|None): Cached parent hierarchy levels.
+    """
 
     def __init__(self, pdsgroups=[], parent=False):
+        """Initialize a PdsGroupTable.
+
+        Args:
+            pdsgroups (list): Initial groups to add.
+            parent (Pds3File|bool|None): Common parent; False to derive from
+                the first inserted group; None indicates a merged directory.
+
+        Returns:
+            None
+        """
 
         self.parent_pdsf = parent   # False for un-initialized; None for merged
         self.groups = []
@@ -19,6 +44,11 @@ class PdsGroupTable(object):
             self.insert_group(group)
 
     def __repr__(self):
+        """Debug representation of the table.
+
+        Returns:
+            str: Representation with first member path and total count.
+        """
         first = None
         count = 0
         for group in self.groups:
@@ -36,6 +66,11 @@ class PdsGroupTable(object):
             return f'PdsGroupTable()'
 
     def copy(self):
+        """Create a shallow copy of the table.
+
+        Returns:
+            PdsGroupTable: A new table with copied groups and metadata.
+        """
         this = PdsGroupTable()
         this.parent_pdsf = self.parent_pdsf
         this.groups = [g.copy() for g in self.groups]
@@ -45,6 +80,11 @@ class PdsGroupTable(object):
 
     @property
     def parent_logical_path(self):
+        """Logical path of the parent directory.
+
+        Returns:
+            str: Parent logical path or empty string if unknown.
+        """
         if self.parent_pdsf:
             return self.parent_pdsf.logical_path
         else:
@@ -52,6 +92,11 @@ class PdsGroupTable(object):
 
     @property
     def levels(self):
+        """Hierarchy of parent directories from root to this table's parent.
+
+        Returns:
+            list: List of PdsFile objects representing the parent hierarchy.
+        """
         if self._levels_filled is None:
             levels = []
             pdsf = self.parent_pdsf
@@ -65,18 +110,43 @@ class PdsGroupTable(object):
 
     @property
     def levels_plus_one(self):
+        """Parent hierarchy plus the first member of the first group.
+
+        Returns:
+            list: First member of the first group followed by parent hierarchy levels.
+        """
         return [self.groups[0].rows[0]] + self.levels
 
     def iterator(self):
+        """Return visible groups only (those with at least one visible member).
+
+        Returns:
+            list: Groups with non-zero visible member count.
+        """
         return [g for g in self.groups if len(g) > 0]
 
     def iterator_for_all(self):
+        """Return all groups, including those with all members hidden.
+
+        Returns:
+            list: All groups in the table.
+        """
         return [g for g in self.groups]
 
     def iterator_for_hidden(self):
+        """Return groups where all members are hidden.
+
+        Returns:
+            list: Groups with zero visible members.
+        """
         return [g for g in self.groups if len(g) == 0]
 
     def pdsfile_iterator(self):
+        """Collect all visible PdsFiles from all groups.
+
+        Returns:
+            list: All visible PdsFiles across all groups.
+        """
         pdsfiles = []
         for group in self.groups:
             pdsfiles += group.iterator()
@@ -84,6 +154,11 @@ class PdsGroupTable(object):
         return pdsfiles
 
     def pdsfile_iterator_for_all(self):
+        """Collect all PdsFiles from all groups, including hidden.
+
+        Returns:
+            list: All PdsFiles across all groups, visible and hidden.
+        """
         pdsfiles = []
         for group in self.groups:
             pdsfiles += group.iterator_for_all()
@@ -91,6 +166,11 @@ class PdsGroupTable(object):
         return pdsfiles
 
     def pdsfile_iterator_for_hidden(self):
+        """Collect only hidden PdsFiles from all groups.
+
+        Returns:
+            list: All hidden PdsFiles across all groups.
+        """
         pdsfiles = []
         for group in self.groups:
             pdsfiles += group.iterator_for_hidden()
@@ -98,10 +178,27 @@ class PdsGroupTable(object):
         return pdsfiles
 
     def __len__(self):
+        """Number of visible groups in the table.
+
+        Returns:
+            int: Count of groups with at least one visible member.
+        """
         return len(self.iterator())
 
     def insert_group(self, group, merge=True):
+        """Insert a group into the table, optionally merging with existing groups.
 
+        Args:
+            group (PdsGroup): Group to insert.
+            merge (bool): If True and a group with the same anchor exists,
+                merge members into it; otherwise append as a new group.
+
+        Raises:
+            ValueError: If the group's parent does not match the table's parent.
+
+        Returns:
+            None
+        """
         if len(group.rows) == 0: return
 
         # Matching parent
@@ -125,6 +222,15 @@ class PdsGroupTable(object):
         self.groups.append(group)
 
     def insert_file(self, pdsf, hidden=False):
+        """Insert a PdsFile into the table, creating or merging into a group.
+
+        Args:
+            pdsf: PdsFile to insert.
+            hidden (bool): If True, mark the file as hidden.
+
+        Returns:
+            None
+        """
 
         parent_pdsf = pdsf.parent()
         if self.parent_pdsf is False:
@@ -144,7 +250,22 @@ class PdsGroupTable(object):
             self.insert_group(pdsgroup.PdsGroup([pdsf], parent=parent_pdsf))
 
     def insert(self, things):
+        """Insert one or more items into the table.
 
+        Accepts PdsFiles, PdsGroups, PdsGroupTables, or logical/absolute paths.
+        Lists and tuples are processed recursively.
+
+        Args:
+            things: Item(s) to insert. Can be a PdsFile, PdsGroup,
+                PdsGroupTable, logical path string, absolute path string, or
+                list/tuple of any of these.
+
+        Raises:
+            TypeError: If the item type is not recognized.
+
+        Returns:
+            None
+        """
         if type(things) in (list,tuple):
             for thing in things:
                 self.insert(thing)
@@ -177,7 +298,17 @@ class PdsGroupTable(object):
 
     def sort_in_groups(self, labels_after=None, dirs_first=None, dirs_last=None,
                              info_first=None):
-        """Within each row of the table, sort the PdsFiles in the PdsGroup."""
+        """Sort members (PdsFiles) within each group (PdsGroup).
+
+        Args:
+            labels_after (bool|None): Place labels after their targets.
+            dirs_first (bool|None): Sort directories before files.
+            dirs_last (bool|None): Sort directories after files.
+            info_first (bool|None): Prioritize info files.
+
+        Returns:
+            None
+        """
 
         for group in self.groups:
             group.sort(labels_after=labels_after,
@@ -187,7 +318,17 @@ class PdsGroupTable(object):
 
     def sort_groups(self, labels_after=None, dirs_first=None, dirs_last=None,
                           info_first=None):
-        """Within each row of the table, sort the PdsFiles in the PdsGroup."""
+        """Sort the groups themselves by their first member's basename.
+
+        Args:
+            labels_after (bool|None): Place labels after their targets.
+            dirs_first (bool|None): Sort directories before files.
+            dirs_last (bool|None): Sort directories after files.
+            info_first (bool|None): Prioritize info files.
+
+        Returns:
+            None
+        """
 
         first_basenames = []
         group_dict = {}
@@ -212,6 +353,14 @@ class PdsGroupTable(object):
         self.groups = new_groups
 
     def hide_pdsfile(self, pdsf):
+        """Hide a PdsFile across all groups in the table.
+
+        Args:
+            pdsf: PdsFile to hide.
+
+        Returns:
+            bool: True if the file was found and hidden; False otherwise.
+        """
         for group in self.groups:
             test = group.hide(pdsf)
             if test: return test
@@ -219,6 +368,14 @@ class PdsGroupTable(object):
         return False
 
     def remove_pdsfile(self, pdsf):
+        """Remove a PdsFile from all groups in the table.
+
+        Args:
+            pdsf: PdsFile to remove.
+
+        Returns:
+            bool: True if the file was found and removed; False otherwise.
+        """
         for group in self.groups:
             test = group.remove(pdsf)
             if test: return test
@@ -226,12 +383,28 @@ class PdsGroupTable(object):
         return False
 
     def filter(self, regex):
+        """Hide files whose basenames do not match the regex pattern.
+
+        Args:
+            regex (re.Pattern): Compiled regex pattern to match against basenames.
+
+        Returns:
+            None
+        """
         for pdsf in self.pdsfile_iterator():
             if not regex.match(pdsf.basename):
                 self.hide_pdsfile(pdsf)
 
     @staticmethod
     def sort_tables(tables):
+        """Sort tables by their parent logical paths.
+
+        Args:
+            tables (list): List of PdsGroupTable objects to sort.
+
+        Returns:
+            list: Tables sorted by parent logical path (empty string first).
+        """
         sort_paths = []
         table_dict = {}
         for table in tables:
@@ -250,8 +423,23 @@ class PdsGroupTable(object):
     def tables_from_pdsfiles(pdsfiles, exclusions=set(), hidden=set(),
                                        labels_after=None, dirs_first=None,
                                        dirs_last=None, info_first=None):
-        """Return a sorted list of PdsGroupTables accommodating the given list
-        of PdsFiles."""
+        """Create and organize PdsGroupTables from a list of PdsFiles.
+
+        Groups files by parent directory, applies sorting rules, and excludes
+        specified files. Returns a sorted list of tables.
+
+        Args:
+            pdsfiles (list): PdsFiles or logical path strings to organize.
+            exclusions (set): Logical paths or abspaths to exclude.
+            hidden (set): Logical paths to mark as hidden initially.
+            labels_after (bool|None): Place labels after their targets.
+            dirs_first (bool|None): Sort directories before files.
+            dirs_last (bool|None): Sort directories after files.
+            info_first (bool|None): Prioritize info files.
+
+        Returns:
+            list: Sorted list of PdsGroupTable objects.
+        """
 
         # Exclusions list can be given as PdsFiles, logical paths, or abspaths
         new_exclusions = set()
@@ -308,6 +496,11 @@ class PdsGroupTable(object):
         return tables
 
     def remove_hidden(self):
+        """Create a copy of the table with all hidden members removed.
+
+        Returns:
+            PdsGroupTable: A new table containing only visible members.
+        """
         new_table = self.copy()
 
         new_groups = []
@@ -324,9 +517,17 @@ class PdsGroupTable(object):
 
     @staticmethod
     def merge_index_row_tables(tables):
-        """Returns a modified list of tables in which index rows are organized
-        by grandparent rather than by parent. The given list of tables must
-        already by sorted.
+        """Merge index row tables by grandparent instead of parent.
+
+        Reorganizes tables so that index rows sharing a grandparent are
+        combined into a single table under that grandparent.
+
+        Args:
+            tables (list): Sorted list of PdsGroupTable objects, some of which
+                may contain index rows.
+
+        Returns:
+            list: Modified list with index row tables merged by grandparent.
         """
 
         # Location for a table in the process of being merged
