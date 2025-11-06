@@ -1,5 +1,8 @@
 """Viewmaster web application (without pause functionality).
 
+There is no `BOOT_TIME`. If the system has just rebooted, we won't wait for a possible
+remote mount of the  holdings directory during validate_holdings_paths.
+
 This module implements a variant of the Viewmaster Flask app used to browse PDS3
 holdings. It renders directory and product pages, provides navigation across
 neighboring items, and manages caching. This variant operates without the pause
@@ -727,7 +730,7 @@ def fill_prev_next_navigation_links(page, params):
 def fill_table_navigation_links(page, params):
     """Populate `webapp_link` for rows across page tables.
 
-    dds the "webapp_link" attribute to each row in the PdsTables. The
+    Add the "webapp_link" attribute to each row in the PdsTables. The
     presence or absence of certain URL parameters, such as "selection",
     "filter", and "pages", could change depending on context.
 
@@ -774,7 +777,7 @@ def fill_table_navigation_links(page, params):
 def get_parallels(query_pdsfile):
     """Find parallel files/dirs in other trees and versions for a target file/dir.
 
-    Creates a dictionary of PdsFile objects parallel to this one. These are
+    Create a dictionary of PdsFile objects parallel to this one. These are
     used at the top of the page, and link to the nearest "equivalent" item in
     a different context, such as "metadata", "previews", etc. The dictionary
     also contains items keyed "next", "prev" and "latest" for items with
@@ -843,7 +846,7 @@ SAFE_FILTER_CATEGORIES = ('volumes', 'previews', 'diagrams', 'calibrated')
 def fill_parallels_navigation_links(page, params):
     """Populate `webapp_link` for files/dirs in the `parallels` map.
 
-    Adds the "webapp_link" attribute to "parallel" items in other directory
+    Add the "webapp_link" attribute to "parallel" items in other directory
     trees. Whether or not certain URL parameters like "filter" are included
     in these URLs depends on context.
 

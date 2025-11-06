@@ -372,7 +372,7 @@ pdsviewable.load_icons(path=ICON_ROOT_, url=ICON_URL_, color=ICON_COLOR,
 ################################################################################
 
 def initialize_caches(reset=False):
-    """Initialize on-disk and in-memory caches.
+    """Initialize the caches.
 
     This preloads `Pds3File` holdings, prepares `Pds3File` caches and optionally clears
     the page cache when it differs from the PdsFile cache backend.
