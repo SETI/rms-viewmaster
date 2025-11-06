@@ -1,8 +1,28 @@
+"""Viewmaster web application (without pause functionality).
+
+This module implements a variant of the Viewmaster Flask app used to browse PDS3
+holdings. It renders directory and product pages, provides navigation across
+neighboring items, and manages caching. This variant operates without the pause
+functionality that may be present in the main viewmaster.py.
+
+The app relies on the `pdsfile` library (not included here) for domain logic
+around PDS3 files, and uses Jinja2 templates under `viewmaster/templates/` to
+render HTML.
+
+Environment
+  - `PDS3_HOLDINGS_DIR`: Absolute path to the PDS3 holdings root.
+
+Configuration
+  Values are imported from `viewmaster_config.py` to configure logging,
+  filesystem locations, caching, and URL prefixes.
+"""
+
 from flask import Flask, flash, redirect, render_template, request, session, \
                   abort, url_for
 from flask_wtf import FlaskForm
 from wtforms import StringField, HiddenField
 import werkzeug
+import wtforms
 
 import os, sys
 import cgi
@@ -137,8 +157,14 @@ VIEWABLE_EXTENSIONS = set([
 # We get the holdings path from PDS3_HOLDIGNS environment variable
 
 def get_holdings_paths():
-    """Return the list of holdings directories."""
+    """Return the list of holdings directories from environment variable.
 
+    Returns:
+        list[str]: List containing the holdings directory path.
+
+    Raises:
+        IOError: If the PDS3_HOLDINGS_DIR environment variable is not set.
+    """
     pds3_holdings_dir = os.getenv('PDS3_HOLDINGS_DIR')  # XXX PDS4
     if pds3_holdings_dir is not None:
         return [pds3_holdings_dir]
@@ -150,7 +176,14 @@ def get_holdings_paths():
 # "pdsdata". We no longer use this approach.
 
 def get_holdings_paths_old_way():
-    """Return the list of holdings directories."""
+    """Return the list of holdings directories.
+
+    This method searches for attached drives in /Volumes with names beginning
+    with "pdsdata". This approach is no longer used.
+
+    Returns:
+        list[str]: List of holdings directory paths found.
+    """
 
     # Read the volume info dict
     DISKNAME_REGEX = re.compile('^pdsdata[0-9]*(|-\w+)$')
@@ -165,8 +198,19 @@ def get_holdings_paths_old_way():
     return holdings_abspaths
 
 def validate_holdings_paths(abspaths):
-    """Make sure these are valid holdings directories. A missing directory
-    is logged as a warning, not an error."""
+    """Validate holdings directory paths and ensure required subdirectories exist.
+
+    A missing directory is logged as a warning, not an error.
+
+    Args:
+        abspaths (list[str]): List of absolute paths to validate.
+
+    Returns:
+        list[str]: List of valid holdings directory paths.
+
+    Raises:
+        IOError: If no valid holdings paths remain after validation.
+    """
 
     valid_abspaths = []
     for abspath in abspaths:
@@ -201,7 +245,17 @@ def validate_holdings_paths(abspaths):
     return valid_abspaths
 
 def create_holdings_symlinks(abspaths):
-    """Create the "holdings*" symlinks inside /Library/WebServer/Documents."""
+    """Create the "holdings*" symlinks inside /Library/WebServer/Documents.
+
+    Args:
+        abspaths (list[str]): List of absolute paths to holdings directories.
+
+    Returns:
+        list[str]: List of paths that were successfully symlinked.
+
+    Raises:
+        IOError: If no holdings paths could be symlinked.
+    """
 
     symlinked_abspaths = []
     for k, abspath in enumerate(abspaths):
@@ -319,7 +373,17 @@ pdsviewable.load_icons(path=ICON_ROOT_, url=ICON_URL_, color=ICON_COLOR,
 ################################################################################
 
 def initialize_caches(reset=False):
-    """Initialize the caches. This could take a while."""
+    """Initialize the caches. This could take a while.
+
+    This preloads PdsFile holdings, prepares PdsFile caches and optionally clears
+    the page cache when it differs from the PdsFile cache backend.
+
+    Args:
+        reset (bool): If True, clears caches before initializing.
+
+    Returns:
+        None
+    """
 
     global HOLDINGS_PATHS, PAGE_CACHING
 
@@ -339,6 +403,13 @@ initialize_caches(reset=False)
 def load_infopage_content(page_pdsfile, hrefs=True):
     """Reads the given PDS3 file. Inserts HTML links in front of any
     recognized file names. Returns a list of OS paths to any referenced files.
+
+    Args:
+        page_pdsfile (PdsFile): PdsFile instance representing the info page.
+        hrefs (bool): If True, insert anchor tags for recognized filenames.
+
+    Returns:
+        str: HTML-safe content with optional links; empty string on I/O error.
     """
 
     # Sorts tuples by increasing recno, then decreasing length
@@ -433,11 +504,25 @@ def load_infopage_content(page_pdsfile, hrefs=True):
 ################################################################################
 
 def get_prev_next_navigation(query_pdsfile):
-    """Returns two lists of files/folders neighboring to the one given. The
+    """Compute neighbors for navigation before and after a target file/dir.
+
+    Returns two lists of files/folders neighboring to the one given. The
     first lists the neighbors before it in reverse sort order; the second lists
-    neighbors after it in sort order. This PdsFile is the first item in each
-    list. The length of each list is defined by MAX_NAV_COUNT and
-    MAX_NAV_STRLEN."""
+    neighbors after it in sort order.
+
+    The target file/dir itself is included as the first element in each list.
+    List sizes and text lengths are constrained by `MAX_NAV_COUNT` and
+    `MAX_NAV_STRLEN`.
+
+    Args:
+        query_pdsfile (PdsFile): PdsFile instance (a file or directory) around
+            which to build navigation.
+
+    Returns:
+        tuple[list[PdsFile], list[PdsFile]]: Two lists `(prev, next)` where
+        each entry is a copy enriched with `nav_name`, `division`, and
+        `terminated` attributes used for display.
+    """
 
     query_copy = query_pdsfile.copy()
     query_copy.nav_name = query_copy.basename
@@ -536,7 +621,15 @@ def get_prev_next_navigation(query_pdsfile):
 ################################################################################
 
 def list_next_pdsfiles(query_pdsfile):
-    """Return list of neighbor directories in the forward direction."""
+    """List up to `MAX_PAGES` forward neighbors from a starting target file/dir.
+
+    Args:
+        query_pdsfile (PdsFile): Starting file or directory.
+
+    Returns:
+        list[PdsFile]: Starting target file or directory followed by forward
+            neighbors.
+    """
 
     siblings = [query_pdsfile]
 
@@ -559,11 +652,21 @@ def list_next_pdsfiles(query_pdsfile):
 ################################################################################
 
 def fill_level_navigation_links(page, params):
-    """Adds the "nav_link" attribute to each item in the parent heirarchy going
+    """Populate `nav_link` for level navigation hierarchy items.
+
+    Adds the "nav_link" attribute to each item in the parent heirarchy going
     upward from each PdsTable. This is the URL that will be followed if a user
     clicks on this item in the hierarchy. A blank means it is not a link.
     Otherwise, the values of some parameters, such as "filter" and "selection",
-    will change depending on the item."""
+    will change depending on the item.
+
+    Args:
+        page (dict): Page dictionary being assembled.
+        params (dict): Current query parameters.
+
+    Returns:
+        None
+    """
 
     # Fill in level navigation links for all tables
     level_params = params.copy()
@@ -591,10 +694,20 @@ def fill_level_navigation_links(page, params):
 ################################################################################
 
 def fill_prev_next_navigation_links(page, params):
-    """Adds the "nav_link" attribute to each item in the neigbor lists. This is
+    """Populate `nav_link` for neighbor navigation lists.
+
+    Adds the "nav_link" attribute to each item in the neigbor lists. This is
     the URL that will be followed if a user clicks on the neighbor. A blank
     means it is not a link. Otherwise, the values of some parameters such as
-    "selection" will change depending on the item."""
+    "selection" will change depending on the item.
+
+    Args:
+        page (dict): Page dictionary with `prev` and `next` lists.
+        params (dict): Current query parameters.
+
+    Returns:
+        None
+    """
 
     nav_params = params.copy()
     nav_params['skip'] = ''
@@ -612,9 +725,19 @@ def fill_prev_next_navigation_links(page, params):
 ################################################################################
 
 def fill_table_navigation_links(page, params):
-    """Adds the "webapp_link" attribute to each row in the PdsTables. The
+    """Populate `webapp_link` for rows across page tables.
+
+    dds the "webapp_link" attribute to each row in the PdsTables. The
     presence or absence of certain URL parameters, such as "selection",
-    "filter", and "pages", could change depending on context."""
+    "filter", and "pages", could change depending on context.
+
+    Args:
+        page (dict): Page dictionary with `tables`, `associations`, `documents`.
+        params (dict): Current query parameters.
+
+    Returns:
+        None
+    """
 
     group_params = params.copy()
     group_params['skip'] = ''
@@ -649,11 +772,21 @@ def fill_table_navigation_links(page, params):
 ################################################################################
 
 def get_parallels(query_pdsfile):
-    """Creates a dictionary of PdsFile objects parallel to this one. These are
+    """Find parallel files/dirs in other trees and versions for a target file/dir.
+
+    Creates a dictionary of PdsFile objects parallel to this one. These are
     used at the top of the page, and link to the nearest "equivalent" item in
     a different context, such as "metadata", "previews", etc. The dictionary
     also contains items keyed "next", "prev" and "latest" for items with
-    multiple versions."""
+    multiple versions.
+
+    Args:
+        query_pdsfile (PdsFile): The target file or directory.
+
+    Returns:
+        dict[str, PdsFile|None]: Mapping of category/version keys to parallels,
+        including `previous`, `next`, `latest`, and version ranks.
+    """
 
     parallels = {}
     for voltype in pdsfile.VOLTYPES:
@@ -708,9 +841,19 @@ SAFE_FILTER_REGEX = re.compile('^\w+\*(|\.*)$', re.I)
 SAFE_FILTER_CATEGORIES = ('volumes', 'previews', 'diagrams', 'calibrated')
 
 def fill_parallels_navigation_links(page, params):
-    """Adds the "webapp_link" attribute to "parallel" items in other directory
+    """Populate `webapp_link` for files/dirs in the `parallels` map.
+
+    Adds the "webapp_link" attribute to "parallel" items in other directory
     trees. Whether or not certain URL parameters like "filter" are included
-    in these URLs depends on context."""
+    in these URLs depends on context.
+
+    Args:
+        page (dict): Page dictionary with `parallels`.
+        params (dict): Current query parameters.
+
+    Returns:
+        None
+    """
 
     temp_params = params.copy()
     temp_params['skip'] = ''
@@ -744,8 +887,15 @@ def fill_parallels_navigation_links(page, params):
 ################################################################################
 
 def fill_option_links(page, params):
-    """Defines the URLs to follow for page display options such as grid view,
-    and multipage or continuous views."""
+    """Define URLs for display options (grid, multipage, continuous).
+
+    Args:
+        page (dict): Page dictionary to annotate.
+        params (dict): Current query parameters.
+
+    Returns:
+        None
+    """
 
     # Create URLs for all alternative options...
     query_pdsfile = page['query']
@@ -799,8 +949,18 @@ def fill_option_links(page, params):
 ################################################################################
 
 def get_directory_page(query_pdsfile):
-    """Initializes the "page" dictionary containing key parameters needed to
-    render the directory page in Viewmaster."""
+    """Assemble the `page` dictionary for a directory view.
+
+    The dictionary contains key parameters needed to render the directory
+    page in Viewmaster.
+
+    Args:
+        query_pdsfile (PdsFile): Directory to display.
+
+    Returns:
+        dict: Page dictionary with groups, associations, documents, navigation,
+        and info content for rendering.
+    """
 
     page = {}
     page['query'] = query_pdsfile
@@ -870,6 +1030,13 @@ def get_directory_page(query_pdsfile):
 
 def directory_page_html(query_pdsfile, params):
     """Construct the page dictionary and return the HTML page for a directory.
+
+    Args:
+        query_pdsfile (PdsFile): Directory to display.
+        params (dict): Cleaned query parameters.
+
+    Returns:
+        str|tuple: HTML string or a tuple `('REDIRECT_NEEDED', new_path)`.
     """
 
     page = get_directory_page(query_pdsfile)
@@ -1074,8 +1241,16 @@ def directory_page_html(query_pdsfile, params):
 ################################################################################
 
 def get_product_page_info(query_pdsfile):
-    """Initializes the "page" dictionary containing key parameters needed to
-    render a product page in Viewmaster."""
+    """Assemble the `page` dictionary for a product view.
+
+    The dictionary contains key parameters needed to render a product page in Viewmaster.
+
+    Args:
+        query_pdsfile (PdsFile): File (or index row) to display.
+
+    Returns:
+        dict: Page dictionary ready for rendering a product.
+    """
 
     page = {}
     page['query'] = query_pdsfile
@@ -1189,8 +1364,15 @@ def get_product_page_info(query_pdsfile):
 ################################################################################
 
 def product_page_html(query_pdsfile, params):
-    """Construct the product page dictionary and return the HTML page for a
-    product."""
+    """Construct the product page dictionary and return the HTML page for a product.
+
+    Args:
+        query_pdsfile (PdsFile): Product to display.
+        params (dict): Cleaned query parameters.
+
+    Returns:
+        str: Rendered HTML.
+    """
 
     page = get_product_page_info(query_pdsfile)
 
@@ -1386,9 +1568,20 @@ def product_page_html(query_pdsfile, params):
 ################################################################################
 
 def format_row_value(value, mask, add_comment=True):
-    """Returns a list of strings to be used for a single item in a view of an
+    """Format a single index-row value as a list of HTML string parts.
+
+    Returns a list of strings to be used for a single item in a view of an
     index row. It handles the formatting of tuples and masked values. Masked
-    values are indicated by an HTML comment."""
+    values are indicated by an HTML comment.
+
+    Args:
+        value (Any): The index-row value or tuple of values.
+        mask (bool|sequence[bool]): Mask flag(s) for the value(s).
+        add_comment (bool): Whether to include the unmasked value as a comment.
+
+    Returns:
+        list[str]: Parts to be concatenated into HTML-safe text.
+    """
 
     # Handle a tuple of multiple values
     try:
@@ -1424,7 +1617,15 @@ def format_row_value(value, mask, add_comment=True):
     return [str(value)]
 
 def format_tuple(values, masks):
+    """Format a tuple of values with masks into HTML parts.
 
+    Args:
+        values (sequence): Values to format.
+        masks (sequence[bool]): Mask flags for each value.
+
+    Returns:
+        list[str]: Parts to be concatenated into HTML-safe text.
+    """
     reclist = ['(']
     for (v,m) in zip(values, masks):
         reclist += format_row_value(v, m, add_comment=False)
@@ -1438,7 +1639,11 @@ def format_tuple(values, masks):
 ################################################################################
 
 def get_query_params_from_request():
-    """Return a param dictionary based on the query args."""
+    """Return a param dictionary based on the query args.
+
+    Returns:
+        dict: Cleaned and typed parameters with defaults applied.
+    """
 
     params = {
         'pages': request.args.get('pages'),
@@ -1454,7 +1659,14 @@ def get_query_params_from_request():
     return clean_query_params(params)
 
 def get_query_params_from_url(url):
-    """Return a param dictionary based on the query args."""
+    """Return a param dictionary based on the query args.
+
+    Args:
+        url (str): Full or partial URL containing a query string.
+
+    Returns:
+        dict: Cleaned and typed parameters with defaults applied.
+    """
 
     params = {
         'pages': 1,
@@ -1476,8 +1688,17 @@ def get_query_params_from_url(url):
     return clean_query_params(params)
 
 def get_query_params_from_dict(params):
-    """Return a cleaned version of this dictionary. It removes undefined keys
-    and fills in a default value for each missing key."""
+    """Normalize and return a parameters dictionary.
+
+    Removes unknown keys and applies defaults for missing values, then cleans
+    and types each value similarly to other parameter helpers.
+
+    Args:
+        params (dict): Raw parameter dictionary.
+
+    Returns:
+        dict: Cleaned and typed parameters with defaults applied.
+    """
 
     defaults = {
         'pages': 1,
@@ -1499,12 +1720,22 @@ def get_query_params_from_dict(params):
     # Fill in default values for missing keys
     for key in defaults:
         if key not in new_params:
-            new_params[key] = defaults[keuy]
+            new_params[key] = defaults[key]
 
     return clean_query_params(params)
 
 def clean_query_params(old_params):
-    """Interpret a dictionary of parameters as extracted from a URL."""
+    """Interpret a dictionary of parameters as extracted from a URL.
+
+    Applies bounds and typing to grid, paging, filtering, and selection
+    parameters.
+
+    Args:
+        old_params (dict): Raw parameters as strings/None.
+
+    Returns:
+        dict: Cleaned parameters.
+    """
 
     # Pages allows for multiple results pages to be concatenated together,
     # starting from the one requested.
@@ -1614,7 +1845,18 @@ def clean_query_params(old_params):
 FILTER_REGEX = re.compile(r'^(\w+|\?+|\*+|\-+|\.|\[\!{0,1}(\w+|\-)+])+$')
 
 def set_filter_in_params(params, filter):
+    """Validate and compile a file-name filter into parameters.
 
+    Converts a user filter pattern into a safe URL form and a compiled regex
+    when valid; otherwise clears the filter-related fields.
+
+    Args:
+        params (dict): Parameters to modify in-place.
+        filter (str): Filter pattern from user input.
+
+    Returns:
+        None
+    """
     if filter == '':
         filter = ''
         filter_for_url = ''
@@ -1651,8 +1893,18 @@ def set_filter_in_params(params, filter):
 ################################################################################
 
 def url_params(params, selection=None):
-    """Return a URL suffix string defining query parameters. Parameters with
-    default values are not included."""
+    """Return a URL suffix string defining query parameters.
+
+    Skips parameters that are at default values and optionally overrides the
+    selection anchor.
+
+    Args:
+        params (dict): Clean parameters.
+        selection (str|None): Optional replacement selection anchor.
+
+    Returns:
+        str: URL suffix beginning with '?' and optional '#anchor'.
+    """
 
     params = clean_query_params(params)
 
@@ -1701,7 +1953,18 @@ def url_params(params, selection=None):
 
 FILTER_REGEX = re.compile(r'^(\w+|\?+|\*+|\-+|\.|\[(\w+|\-)+])+$')
 
-def pattern_validator(form, field):
+def pattern_validator(field):
+    """WTForms validator for the file-name filter pattern.
+
+    Args:
+        field (wtforms.Field): Field being validated.
+
+    Raises:
+        wtforms.validators.ValidationError: If the pattern is invalid.
+
+    Returns:
+        None
+    """
     filter = field.data
     if filter is None: return
     filter = str(filter)
@@ -1715,6 +1978,12 @@ def pattern_validator(form, field):
     return
 
 class FilterForm(FlaskForm):
+    """Filter form for file-name pattern and stateful redirect.
+
+    Fields:
+        filter (StringField): Optional file name match expression.
+        hidden (HiddenField): Hidden field carrying the current URL.
+    """
     filter = StringField('File name filter', [pattern_validator])
     hidden = HiddenField('hidden')
 
@@ -1722,6 +1991,11 @@ class FilterForm(FlaskForm):
 
 @app.route('/set_filter', methods=['POST'])
 def set_filter():
+    """Handle filter submission and redirect to updated URL.
+
+    Returns:
+        werkzeug.wrappers.response.Response: Redirect response.
+    """
     form = FilterForm()
     if not form.validate_on_submit():
         flash('Invalid match expression: <font face="Courier">' +
@@ -1743,7 +2017,16 @@ def set_filter():
 @app.route('/', defaults={'query_path': ''})
 @app.route('/<path:query_path>')
 def viewmaster(query_path):
+    """Main route handler rendering directory or product pages.
 
+    Applies caching, normalizes the URL, and renders the appropriate view.
+
+    Args:
+        query_path (str): Logical PDS path with optional query string.
+
+    Returns:
+        str|Response|tuple: HTML page, redirect, or 404 page.
+    """
     global LOGGER
 
     # This can happen during testing
@@ -1874,7 +2157,13 @@ DIGEST = '448b293a2708e6a6a295daf7da35422803bfa6daf2a9db78d202ccd986b3542f'
 
 @app.route('/--build-cache', methods=['POST','GET'])
 def build_cache():
-    """Expands the caches. This will take a while."""
+    """Expand caches for commonly accessed pages.
+
+    Protected by a password submitted via form; may take considerable time.
+
+    Returns:
+        str|Response: Status text or template response.
+    """
 
     # When the page is first loaded, request.method == "GET"
     # Upon filling in the password and clicking on "Enter", method == "POST"
@@ -1902,8 +2191,13 @@ def build_cache():
         return 'Viewmaster cache building FAILED'
 
 def fill_page_cache():
-    """Load all the top-level and large pages into the cache. This could take
-    a while."""
+    """Pre-render and cache top-level and large directory pages.
+
+    Walks holdings to warm the page cache for faster subsequent access.
+
+    Returns:
+        None
+    """
 
     # Process un-versioned (latest) volsets first, then versioned
     unversioned_volset_pdsfiles = []
@@ -1961,7 +2255,13 @@ def fill_page_cache():
 
 @app.route('/--reset-cache', methods=['POST','GET'])
 def reset_cache():
-    """Resets the cache."""
+    """Reset caches.
+
+    Protected by a password submitted via form.
+
+    Returns:
+        str|Response: Status text or template response.
+    """
 
     # When the page is first loaded, request.method == "GET"
     # Upon filling in the password and clicking on "Enter", method == "POST"
@@ -1991,8 +2291,11 @@ def reset_cache():
 
 @app.route('/--hexdigest', methods=['POST','GET'])
 def hexdigest():
-    """Displays the hexdigest for a new password. Just assign the value of the
-    variable DIGEST above to the hex string displayed."""
+    """Utility to compute and display the SHA-256 hexdigest of a password.
+
+    Returns:
+        str|Response: Hex digest string on POST; form template on GET.
+    """
 
     if request.method == 'POST':
         password = request.form['password']
@@ -2012,6 +2315,14 @@ def hexdigest():
 ################################################################################
 
 def trim_html(html):
+    """Minify HTML by trimming whitespace outside of <pre> blocks.
+
+    Args:
+        html (str): Raw HTML string.
+
+    Returns:
+        str: Trimmed HTML.
+    """
     old_html_recs = html.split('\n')
     new_html_recs = []
     preformatted = False
