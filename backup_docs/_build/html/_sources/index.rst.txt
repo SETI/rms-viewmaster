@@ -1,5 +1,5 @@
 .. viewmaster documentation master file, created by
-   sphinx-quickstart on Mon Nov 10 15:15:12 2025.
+   sphinx-quickstart on Fri May 24 12:58:54 2024.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
@@ -14,7 +14,7 @@ Welcome to ``viewmaster``' documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   viewmaster_config
+   module
 
 
 Indices and tables

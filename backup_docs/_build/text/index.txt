@@ -1,0 +1,18 @@
+Welcome to "viewmaster"' documentation!
+***************************************
+
+
+Contents:
+^^^^^^^^^
+
+* "viewmaster" Module
+
+
+Indices and tables
+******************
+
+* Index
+
+* Module Index
+
+* Search Page
