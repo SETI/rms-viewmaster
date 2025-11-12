@@ -16,6 +16,7 @@ Welcome to ``viewmaster`` documentation!
 
    link
    pdsgroup
+   pdsgrouptable
    viewmaster_config
 
 
