@@ -15,6 +15,7 @@ Welcome to ``viewmaster``' documentation!
    :caption: Contents:
 
    viewmaster_config
+   link
 
 
 Indices and tables

@@ -1,16 +1,16 @@
 """Link redirect service for PDS files and directories.
 
 This module provides a simple Flask application that redirects requests to
-either Viewmaster (for directories) or directly to the file location (for
-files). It serves as a lightweight routing layer that determines whether a
-requested path is a directory or file and redirects accordingly.
+either Viewmaster (for directories) or directly to the file location (for files).
+It serves as a lightweight routing layer that determines whether a requested path is
+a directory or file and redirects accordingly.
 
 The service:
-- Detects directories by checking if the basename has no extension or ends
-  with a digit (version suffix)
-- Redirects directories to Viewmaster for proper rendering
-- Redirects files to their actual location in the holdings directories
-- Uses glob patterns to locate files across multiple holdings symlinks
+    * Detects directories by checking if the basename has no extension or ends
+      with a digit (version suffix)
+    * Redirects directories to Viewmaster for proper rendering
+    * Redirects files to their actual location in the holdings directories
+    * Uses glob patterns to locate files across multiple holdings symlinks
 """
 
 from flask import Flask, redirect, abort
@@ -37,7 +37,7 @@ app = Flask(__name__)
 #     LOG_ROOT_PREFIX_ = '/Library/WebServer/Logs/webapps/'
 ################################################################################
 
-from viewmaster_config import *
+from viewmaster.viewmaster_config import *
 
 LOGNAME = LOGNAME.replace('viewmaster', 'link')
 LOGGER = pdslogger.PdsLogger(LOGNAME, limits={'info': -1, 'normal': -1},
@@ -68,23 +68,26 @@ def link(query_path):
 
     Determines whether the requested path is a directory or file and redirects
     accordingly:
-    - Directories are redirected to Viewmaster for proper rendering
-    - Files are redirected to their actual location in holdings
+
+        * Directories are redirected to Viewmaster for proper rendering
+        * Files are redirected to their actual location in holdings
 
     Directory detection is based on whether the basename has no extension or
     ends with a digit (version suffix like "_v1.0").
 
     Args:
-        query_path (str): The requested path, which may include query
-            parameters that will be stripped.
+        query_path (str):
+            The requested path, which may include query parameters that will be stripped.
 
     Returns:
-        werkzeug.wrappers.response.Response: Redirect response to either
-            Viewmaster (for directories) or the file location (for files).
+        werkzeug.wrappers.response.Response:
+            Redirect response to either Viewmaster (for directories) or the file
+            location (for files).
 
     Raises:
-        werkzeug.exceptions.NotFound: 404 error if the file is not found
-            in any holdings directory.
+        werkzeug.exceptions.NotFound:
+            404 error if the file is not found in any holdings directory.
+
     """
 
     global LOGGER
