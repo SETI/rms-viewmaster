@@ -1,13 +1,14 @@
 """Iterator classes for navigating related PDS files and directories.
 
 This module provides three iterator classes for traversing PdsFile structures:
-- `PdsDirIterator`: Iterates across related directories, jumping into adjacent
-  directories and parallel volumes when required.
-- `PdsFileIterator`: Iterates through files within directories, with support
-  for jumping to adjacent directories when needed.
-- `PdsRowIterator`: Simple iterator for files within a single directory
-  (siblings only). It's used for index row navigation where each row is a sibling in
-  the same table.
+
+    * `PdsDirIterator`: Iterates across related directories, jumping into adjacent
+      directories and parallel volumes when required.
+    * `PdsFileIterator`: Iterates through files within directories, with support
+      for jumping to adjacent directories when needed.
+    * `PdsRowIterator`: Simple iterator for files within a single directory
+      (siblings only). It's used for index row navigation where each row is a sibling in
+      the same table.
 
 All iterators support both forward and backward iteration and can navigate
 across directory boundaries when configured to do so.
