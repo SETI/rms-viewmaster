@@ -85,6 +85,7 @@ info_logfile = os.path.abspath(LOG_FILE)
 if sys.stdin.isatty():
     LOGGER.add_handler(pdslogger.stdout_handler)
 else:  # don't do this when testing in interactive mode
+    # Bypass the permission error when using read the docs to build the documents
     try:
         info_handler = pdslogger.file_handler(info_logfile, level=logging.INFO,
                                             rotation='midnight')

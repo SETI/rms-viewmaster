@@ -80,6 +80,7 @@ LOG_FILE = LOG_ROOT_PREFIX_ + 'viewmaster.log'
 info_logfile = os.path.abspath(LOG_FILE)
 
 if not sys.stdin.isatty():      # don't do this when testing in interactive mode
+    # Bypass the permission error when using read the docs to build the documents
     try:
         info_handler = pdslogger.file_handler(info_logfile, level=logging.INFO,
                                             rotation='midnight')

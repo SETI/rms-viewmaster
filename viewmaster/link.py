@@ -45,6 +45,7 @@ LOGGER = pdslogger.PdsLogger(LOGNAME, limits={'info': -1, 'normal': -1},
 
 LOG_FILE = LOG_ROOT_PREFIX_ + 'link.log'
 info_logfile = os.path.abspath(LOG_FILE)
+# Bypass the permission error when using read the docs to build the documents
 try:
     info_handler = pdslogger.file_handler(info_logfile, level=logging.INFO,
                                         rotation='midnight')
