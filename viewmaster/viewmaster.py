@@ -94,10 +94,15 @@ else:  # don't do this when testing in interactive mode
         pass
 
 DEBUG_LOG_FILE = LOG_ROOT_PREFIX_ + 'viewmaster_debug.log'
-debug_logfile = os.path.abspath(DEBUG_LOG_FILE)
-debug_handler = pdslogger.file_handler(debug_logfile, level=logging.DEBUG,
-                                       rotation='midnight')
-LOGGER.add_handler(debug_handler)
+
+# Bypass the permission error when using read the docs to build the documents
+try:
+    debug_logfile = os.path.abspath(DEBUG_LOG_FILE)
+    debug_handler = pdslogger.file_handler(debug_logfile, level=logging.DEBUG,
+                                        rotation='midnight')
+    LOGGER.add_handler(debug_handler)
+except PermissionError:
+    pass
 
 Pds3File.set_logger(LOGGER)              # Let PdsFile also log
 
