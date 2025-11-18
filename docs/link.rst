@@ -1,4 +1,4 @@
-``link`` Module
+``link`` module
 ============================
 
 .. automodule:: viewmaster.link

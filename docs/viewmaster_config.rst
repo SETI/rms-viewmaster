@@ -1,4 +1,4 @@
-``viewmaster_config`` Module
+``viewmaster_config`` module
 ============================
 
 .. automodule:: viewmaster.viewmaster_config
