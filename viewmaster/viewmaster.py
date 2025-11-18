@@ -336,8 +336,10 @@ try:
     paths = get_holdings_paths()
     paths = validate_holdings_paths(paths)
 except Exception as e:
-    LOGGER.exception(e)
-    sys.exit(1)
+    on_rtd = os.environ.get('READTHEDOCS', 'False') == 'True'
+    if not on_rtd:
+        LOGGER.exception(e)
+        sys.exit(1)
 
 assert len(paths) == 1
 HOLDINGS_PATHS = paths
