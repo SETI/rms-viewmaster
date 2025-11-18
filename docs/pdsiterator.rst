@@ -1,4 +1,4 @@
-``pdsiterator`` module
+``pdsiterator`` Module
 ============================
 
 .. automodule:: viewmaster.pdsiterator

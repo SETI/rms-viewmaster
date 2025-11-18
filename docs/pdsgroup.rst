@@ -1,4 +1,4 @@
-``pdsgroup`` module
+``pdsgroup`` Module
 ============================
 
 .. automodule:: viewmaster.pdsgroup

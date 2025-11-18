@@ -1,4 +1,4 @@
-``pdsgrouptable`` module
+``pdsgrouptable`` Module
 ============================
 
 .. automodule:: viewmaster.pdsgrouptable

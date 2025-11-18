@@ -1,4 +1,4 @@
-``viewmaster_without_pause`` module
+``viewmaster_without_pause`` Module
 ===================================
 
 .. automodule:: viewmaster.viewmaster_without_pause
