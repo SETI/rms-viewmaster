@@ -26,15 +26,21 @@
    pip install -r requirements.txt
    ```
 
-3. Set the environment variable `PDS3_HOLDINGS` to the path of your PDS3 holdings.
+3. Set the environment variable `PDS3_HOLDINGS_DIR` to the path of your PDS3 holdings.
+
+4. Create and set the ownership of `/Library/WebServer` to avoid permission denied error when running:
+   ```bash
+   sudo mkdir /Library/WebServer
+   sudo chown -R username /Library/WebServer    # Replace "username" with your own username
+   ```
 
 ---
 
 ## Running Locally
 
-1. Start the server:
+1. Start the server at the root directory of the repo:
    ```bash
-   sudo -E python viewmaster/viewmaster.py
+   python -m viewmaster.viewmaster
    ```
 
 2. Open your browser and go to:

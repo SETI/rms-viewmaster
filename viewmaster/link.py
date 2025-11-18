@@ -37,7 +37,7 @@ app = Flask(__name__)
 #     LOG_ROOT_PREFIX_ = '/Library/WebServer/Logs/webapps/'
 ################################################################################
 
-from viewmaster.viewmaster_config import *
+from .viewmaster_config import *
 
 LOGNAME = LOGNAME.replace('viewmaster', 'link')
 LOGGER = pdslogger.PdsLogger(LOGNAME, limits={'info': -1, 'normal': -1},

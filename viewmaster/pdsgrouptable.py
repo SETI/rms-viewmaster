@@ -8,7 +8,7 @@ remaining in the collection.
 """
 
 import pdsfile
-import viewmaster.pdsgroup
+from . import pdsgroup
 
 class PdsGroupTable(object):
     """An ordered collection of PdsGroups sharing a common parent.

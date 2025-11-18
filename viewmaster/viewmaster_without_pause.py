@@ -41,12 +41,12 @@ import zlib
 
 import pdsfile
 from pdsfile import pdscache, Pds3File, pdsviewable
-import viewmaster.pdsiterator as pdsiterator
+from . import pdsiterator
 import pdslogger
 import pdstable
 
-from viewmaster.pdsgroup import PdsGroup
-from viewmaster.pdsgrouptable import PdsGroupTable
+from .pdsgroup import PdsGroup
+from .pdsgrouptable import PdsGroupTable
 
 pdsfile.DEFAULT_CACHING = 'dir'             # Cache all directories
 
@@ -68,7 +68,7 @@ app.secret_key = "Cassini Grand Finale!"    # needed by flask_wtf
 #     LOG_ROOT_PREFIX_ = '/Library/WebServer/Logs/webapps/'
 ################################################################################
 
-from viewmaster.viewmaster_config import *
+from .viewmaster_config import *
 
 try:
     LOGGER = pdslogger.PdsLogger.get_logger(LOGNAME)

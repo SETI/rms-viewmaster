@@ -39,12 +39,12 @@ import zlib
 
 import pdsfile
 from pdsfile import pdscache, Pds3File, pdsviewable
-import viewmaster.pdsiterator as pdsiterator
+from . import pdsiterator
 import pdslogger
 import pdstable
 
-from viewmaster.pdsgroup import PdsGroup
-from viewmaster.pdsgrouptable import PdsGroupTable
+from .pdsgroup import PdsGroup
+from .pdsgrouptable import PdsGroupTable
 
 pdsfile.DEFAULT_CACHING = 'dir'             # Cache all directories
 
@@ -69,7 +69,7 @@ LOCAL_IP_ADDRESS_A_B_C = LOCAL_IP_ADDRESS.rpartition('.')[0] + '.'
 #     LOG_ROOT_PREFIX_ = '/Library/WebServer/Logs/webapps/'
 ################################################################################
 
-from viewmaster.viewmaster_config import *
+from .viewmaster_config import *
 if USE_SHELVES_ONLY:
     Pds3File.use_shelves_only(True)
 
