@@ -17,6 +17,7 @@ Configuration
   filesystem locations, caching, and URL prefixes.
 """
 
+from tkinter.constants import ON
 from flask import Flask, flash, redirect, render_template, redirect, request, send_file
 from flask_wtf import FlaskForm
 from wtforms import StringField, HiddenField
@@ -53,6 +54,8 @@ app.secret_key = "Cassini Grand Finale!"    # needed by flask_wtf
 
 LOCAL_IP_ADDRESS = socket.gethostbyname(socket.gethostname())
 LOCAL_IP_ADDRESS_A_B_C = LOCAL_IP_ADDRESS.rpartition('.')[0] + '.'
+
+ON_RTD = os.environ.get('READTHEDOCS', 'False') == 'True'
 
 ################################################################################
 # These are defined in viewmaster_config.py. Values shown here are examples.
@@ -336,8 +339,7 @@ try:
     paths = get_holdings_paths()
     paths = validate_holdings_paths(paths)
 except Exception as e:
-    on_rtd = os.environ.get('READTHEDOCS', 'False') == 'True'
-    if not on_rtd:
+    if not ON_RTD:
         LOGGER.exception(e)
         sys.exit(1)
     else:
@@ -408,7 +410,8 @@ def initialize_caches(reset=False):
                                  VIEWMASTER_MEMCACHE_PORT):
         PAGE_CACHE.clear()
 
-initialize_caches(reset=False)
+if not ON_RTD:
+    initialize_caches(reset=False)
 
 ################################################################################
 ################################################################################
