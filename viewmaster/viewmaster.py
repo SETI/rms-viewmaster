@@ -85,9 +85,12 @@ info_logfile = os.path.abspath(LOG_FILE)
 if sys.stdin.isatty():
     LOGGER.add_handler(pdslogger.stdout_handler)
 else:  # don't do this when testing in interactive mode
-    info_handler = pdslogger.file_handler(info_logfile, level=logging.INFO,
-                                          rotation='midnight')
-    LOGGER.add_handler(info_handler)
+    try:
+        info_handler = pdslogger.file_handler(info_logfile, level=logging.INFO,
+                                            rotation='midnight')
+        LOGGER.add_handler(info_handler)
+    except PermissionError:
+        pass
 
 DEBUG_LOG_FILE = LOG_ROOT_PREFIX_ + 'viewmaster_debug.log'
 debug_logfile = os.path.abspath(DEBUG_LOG_FILE)
