@@ -340,6 +340,8 @@ except Exception as e:
     if not on_rtd:
         LOGGER.exception(e)
         sys.exit(1)
+    else:
+        paths = ['holdings']
 
 assert len(paths) == 1
 HOLDINGS_PATHS = paths
