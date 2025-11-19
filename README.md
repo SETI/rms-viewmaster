@@ -33,7 +33,7 @@
 4. Create and set ownership for `/Library/WebServer` to avoid permission issues:
    ```bash
    sudo mkdir /Library/WebServer
-   sudo chown -R username /Library/WebServer   # Replace "username" your own
+   sudo chown -R user /Library/WebServer   # Replace "user" with your own username
    ```
 
 ---
