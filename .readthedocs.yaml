@@ -17,12 +17,6 @@ build:
   apt_packages:
     - libmemcached-dev
 
-  jobs:
-    build:
-      html:
-        - cd docs # Change to your documentation directory if not at the root
-        - make html
-
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
   configuration: docs/conf.py
