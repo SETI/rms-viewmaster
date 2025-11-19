@@ -17,6 +17,13 @@ build:
   apt_packages:
     - libmemcached-dev
 
+  jobs:
+    build.html:
+      - command: cd docs
+      - command: make clean
+      - command: make html
+
+
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
   configuration: docs/conf.py
