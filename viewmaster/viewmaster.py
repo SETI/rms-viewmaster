@@ -55,6 +55,7 @@ app.secret_key = "Cassini Grand Finale!"    # needed by flask_wtf
 LOCAL_IP_ADDRESS = socket.gethostbyname(socket.gethostname())
 LOCAL_IP_ADDRESS_A_B_C = LOCAL_IP_ADDRESS.rpartition('.')[0] + '.'
 
+# Check if it's running on read the docs
 ON_RTD = os.environ.get('READTHEDOCS', 'False') == 'True'
 
 ################################################################################
@@ -89,23 +90,19 @@ if sys.stdin.isatty():
     LOGGER.add_handler(pdslogger.stdout_handler)
 else:  # don't do this when testing in interactive mode
     # Bypass the permission error when using read the docs to build the documents
-    try:
+    if not ON_RTD:
         info_handler = pdslogger.file_handler(info_logfile, level=logging.INFO,
                                             rotation='midnight')
         LOGGER.add_handler(info_handler)
-    except PermissionError:
-        pass
 
 DEBUG_LOG_FILE = LOG_ROOT_PREFIX_ + 'viewmaster_debug.log'
 
 # Bypass the permission error when using read the docs to build the documents
-try:
+if not ON_RTD:
     debug_logfile = os.path.abspath(DEBUG_LOG_FILE)
     debug_handler = pdslogger.file_handler(debug_logfile, level=logging.DEBUG,
                                         rotation='midnight')
     LOGGER.add_handler(debug_handler)
-except PermissionError:
-    pass
 
 Pds3File.set_logger(LOGGER)              # Let PdsFile also log
 
@@ -335,15 +332,15 @@ LOGGER.blankline()
 LOGGER.info('Starting Viewmaster', info_logfile)
 
 # Get the holdings paths and define the "holdings" symlinks, or abort trying
-try:
-    paths = get_holdings_paths()
-    paths = validate_holdings_paths(paths)
-except Exception as e:
-    if not ON_RTD:
-        LOGGER.exception(e)
-        sys.exit(1)
-    else:
-        paths = ['holdings']
+if ON_RTD: # Put a placeholder value when running on read the docs
+    paths = ['holdings']
+else:
+    try:
+        paths = get_holdings_paths()
+        paths = validate_holdings_paths(paths)
+    except Exception as e:
+            LOGGER.exception(e)
+            sys.exit(1)
 
 assert len(paths) == 1
 HOLDINGS_PATHS = paths
@@ -401,6 +398,10 @@ def initialize_caches(reset=False):
 
     global HOLDINGS_PATHS, PAGE_CACHING
 
+    # We skip preload when running on read the docs
+    if ON_RTD:
+        return
+
     LOGGER.replace_root(HOLDINGS_PATHS)
     print(VIEWMASTER_PREFIX_+ICON_URL_)
     Pds3File.preload(HOLDINGS_PATHS, port=PDSFILE_MEMCACHE_PORT,
@@ -410,8 +411,7 @@ def initialize_caches(reset=False):
                                  VIEWMASTER_MEMCACHE_PORT):
         PAGE_CACHE.clear()
 
-if not ON_RTD:
-    initialize_caches(reset=False)
+initialize_caches(reset=False)
 
 ################################################################################
 ################################################################################

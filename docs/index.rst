@@ -8,7 +8,7 @@ Welcome to ``viewmaster`` documentation!
 
 .. include:: ../README.md
    :parser: myst_parser.sphinx_
-   :start-after: forks/SETI/rms-viewmaster)
+   :start-after: <!-- start-after-point -->
 
 .. toctree::
    :maxdepth: 2

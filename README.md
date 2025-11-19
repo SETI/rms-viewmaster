@@ -1,3 +1,4 @@
+<!-- start-after-point -->
 # Viewmaster
 
 | PyPI Release | Test Status | Code Coverage |
