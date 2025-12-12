@@ -36,7 +36,7 @@ import platform
 import socket
 import sys
 
-# Test for a command line run, sudo python viewmaster/viewmaster.py
+# Test for a command line run, python viewmaster/viewmaster.py
 VIEWMASTER_TESTING = 'viewmaster.py' in sys.argv[0]
 
 # For command-line testing and development

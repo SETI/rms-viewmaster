@@ -165,7 +165,7 @@ VIEWABLE_EXTENSIONS = set([
 # Fill in HOLDINGS_PATHS, a list of absolute paths to the "holdings" directories
 ################################################################################
 
-# We get the holdings path from PDS3_HOLDIGNS environment variable
+# We get the holdings path from PDS3_HOLDINGS environment variable
 
 def get_holdings_paths():
     """Return the list of holdings directories from environment variable.
