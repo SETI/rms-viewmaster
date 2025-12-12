@@ -47,5 +47,5 @@
 
 2. Open your browser and go to:
 
-   **http://127.0.0.1:8080/**
+   <http://127.0.0.1:8080/>
    *(This corresponds to `VIEWMASTER_PREFIX_` in `viewmaster_config.py`.)*
