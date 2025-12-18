@@ -30,19 +30,19 @@ class PdsGroup(object):
         hidden (set[str]): Logical paths of members hidden from default views.
     """
 
-    def __init__(self, pdsfiles=[], parent=False, anchor=None, hidden=[]):
+    def __init__(self, pdsfiles=None, parent=False, anchor=None, hidden=None):
         """PdsGroup constructor.
 
         Args:
-            pdsfiles (list|tuple|Pds3File): An ordered list of PdsFiles. Can be empty,
-                which means the PdsGroup does not yet have any members.
+            pdsfiles (list|tuple|Pds3File|None): An ordered list of PdsFiles. Can be
+                empty, which means the PdsGroup does not yet have any members.
             parent (Pds3File|bool|None): The common parent of all the PdsFiles.
                 False means to derive this from the pdsfiles. None means that the parent
                 is a merged directory.
             anchor (str|None): A string referring to this PdsGroup, which should
                 be unique within the directory. None for default, which is derived from
                 the basename of the first file in the group.
-            hidden (list|set): A list or set of the logical paths of rows that are
+            hidden (list|set|None): A list or set of the logical paths of rows that are
                 to be treated as hidden. Default is an empty list.
 
         Returns:
@@ -55,7 +55,7 @@ class PdsGroup(object):
                                     # merged directory.
         self.anchor = None
         self.rows = []
-        self.hidden = set(hidden)
+        self.hidden = set(hidden or [])
 
         self._isdir_filled = None
         self._iconset_filled = None
@@ -63,11 +63,13 @@ class PdsGroup(object):
         self._local_viewset_filled = None
         self._all_viewsets_filled = None
 
+        pdsfiles = pdsfiles or []
         if isinstance(pdsfiles, (list, tuple)):
             for pdsf in pdsfiles:
                 self.append(pdsf)
         else:
-            self.append(pdsfiles)
+            if pdsfiles:
+                self.append(pdsfiles)
 
     def __len__(self):
         """Number of visible members in the group.
