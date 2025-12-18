@@ -24,11 +24,11 @@ class PdsGroupTable(object):
         _levels_filled (list|None): Cached parent hierarchy levels.
     """
 
-    def __init__(self, pdsgroups=[], parent=False):
+    def __init__(self, pdsgroups=None, parent=False):
         """Initialize a PdsGroupTable.
 
         Args:
-            pdsgroups (list): Initial groups to add.
+            pdsgroups (list|None): Initial groups to add.
             parent (Pds3File|bool|None): Common parent; False to derive from
                 the first inserted group; None indicates a merged directory.
 
@@ -40,7 +40,7 @@ class PdsGroupTable(object):
         self.groups = []
         self._levels_filled = None
 
-        for group in pdsgroups:
+        for group in (pdsgroups or []):
             self.insert_group(group)
 
     def __repr__(self):
