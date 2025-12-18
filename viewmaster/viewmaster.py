@@ -17,8 +17,7 @@ Configuration
   filesystem locations, caching, and URL prefixes.
 """
 
-from tkinter.constants import ON
-from flask import Flask, flash, redirect, render_template, redirect, request, send_file
+from flask import Flask, flash, redirect, render_template, request, send_file
 from flask_wtf import FlaskForm
 from wtforms import StringField, HiddenField
 import wtforms
