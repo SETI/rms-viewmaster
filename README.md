@@ -16,11 +16,13 @@
 ## 🛠️ Environment Setup (first‑time only)
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/SETI/rms-viewmaster.git
    ```
 
 2. Create a virtual environment and install dependencies:
+
    ```bash
    cd rms-viewmaster
    python -m venv myenv        # Replace "myenv" with your preferred name
@@ -31,6 +33,7 @@
 3. Set the environment variable `PDS3_HOLDINGS_DIR` to the path of your PDS3 holdings.
 
 4. Create and set ownership for `/Library/WebServer` to avoid permission issues:
+
    ```bash
    sudo mkdir /Library/WebServer
    sudo chown -R user /Library/WebServer   # Replace "user" with your own username
