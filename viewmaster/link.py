@@ -51,6 +51,8 @@ try:
                                         rotation='midnight')
     LOGGER.add_handler(info_handler)
 except PermissionError:
+    LOGGER.warn('Unable to open log file for link service; continuing without '
+                'file handler', info_logfile)
     pass
 
 # DEBUG_LOG_FILE = LOG_ROOT_PREFIX_ + 'link_debug.log'
