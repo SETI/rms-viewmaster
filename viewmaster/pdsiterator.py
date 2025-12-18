@@ -83,6 +83,11 @@ class PdsDirIterator(object):
             self.current_logical_path = None
             self.sign = 1
 
+        if isinstance(pdsf, pdsfile.Pds3File):
+            pdsf_class = pdsfile.Pds3File
+        elif isinstance(pdsf, pdsfile.Pds4File):
+            pdsf_class = pdsfile.Pds4File
+
         fnmatch_patterns = pdsf.NEIGHBORS.first(pdsf.logical_path)
         if isinstance(fnmatch_patterns, str):
             fnmatch_patterns = (fnmatch_patterns,)
@@ -93,11 +98,11 @@ class PdsDirIterator(object):
             else:
                 paths = []
                 for fnmatch_pattern in fnmatch_patterns:
-                    abspaths = pdsfile.PdsFile.glob_glob(pdsf.root_ +
+                    abspaths = pdsf_class.glob_glob(pdsf.root_ +
                                                          fnmatch_pattern)
                     abspaths = [pdsfile.repair_case(p) for p in abspaths]
                     abspaths = [a for a in abspaths if os.path.isdir(a)]
-                    paths += pdsfile.PdsFile.logicals_for_abspaths(abspaths)
+                    paths += pdsf_class.logicals_for_abspaths(abspaths)
 
                 # Remove duplicates
                 paths = list(set(paths))
@@ -107,7 +112,7 @@ class PdsDirIterator(object):
                     paths.remove('')
 
                 # Sort based on the rules
-                logical_paths = pdsfile.PdsFile.sort_logical_paths(paths)
+                logical_paths = pdsf_class.sort_logical_paths(paths)
                 DIRECTORY_CACHE[fnmatch_patterns] = logical_paths
 
         else:
@@ -120,7 +125,7 @@ class PdsDirIterator(object):
             self.neighbor_index = logical_paths_lc.index(this_path_lc)
         except ValueError:
             logical_paths.append(pdsf.logical_path)
-            logical_paths = pdsfile.PdsFile.sort_logical_paths(logical_paths)
+            logical_paths = pdsf_class.sort_logical_paths(logical_paths)
             self.neighbor_index = logical_paths.index(pdsf.logical_path)
 
         self.sign = -1 if sign < 0 else +1
@@ -146,7 +151,12 @@ class PdsDirIterator(object):
         else:
             sign1 = -1 if sign < 0 else +1
 
-        pdsf = pdsfile.PdsFile.from_logical_path(self.current_logical_path)
+        for class_name in [pdsfile.Pds3File, pdsfile.Pds4File]:
+            try:
+                pdsf = class_name.from_logical_path(self.current_logical_path)
+            except ValueError:
+                continue
+            break
         this = PdsDirIterator(pdsf, sign=sign1, logger=self.logger)
 
         return this
@@ -297,7 +307,12 @@ class PdsFileIterator(object):
         else:
             sign1 = -1 if sign < 0 else +1
 
-        pdsf = pdsfile.PdsFile.from_logical_path(self.current_logical_path)
+        for class_name in [pdsfile.Pds3File, pdsfile.Pds4File]:
+            try:
+                pdsf = class_name.from_logical_path(self.current_logical_path)
+            except ValueError:
+                continue
+            break
         this = PdsFileIterator(pdsf, sign=sign1,
                                pattern=self.pattern, exclude=self.exclude,
                                filter=self.filter, logger=self.logger)
@@ -400,7 +415,13 @@ class PdsFileIterator(object):
 
         # Go to the next parent
         (parent_logical_path, parent_display_path, _) = self.dir_iterator.next()
-        self.parent = pdsfile.PdsFile.from_logical_path(parent_logical_path)
+
+        for class_name in [pdsfile.Pds3File, pdsfile.Pds4File]:
+            try:
+                self.parent = class_name.from_logical_path(parent_logical_path)
+            except ValueError:
+                continue
+            break
 
         # Load the next set of siblings
         basenames = self.parent.sort_basenames(self.parent.childnames)

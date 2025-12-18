@@ -275,10 +275,15 @@ class PdsGroupTable(object):
         thing = things
 
         if isinstance(thing, str):
-            try:
-                pdsf = pdsfile.PdsFile.from_logical_path(thing)
-            except ValueError:
-                pdsf = pdsfile.PdsFile.from_abspath(thing)
+            for class_name in [pdsfile.Pds3File, pdsfile.Pds4File]:
+                try:
+                    pdsf = class_name.from_logical_path(thing)
+                except ValueError:
+                    try:
+                        pdsf = class_name.from_abspath(thing)
+                    except ValueError:
+                        continue
+                break
 
             self.insert_file(pdsf)
 
@@ -289,7 +294,7 @@ class PdsGroupTable(object):
         elif isinstance(thing, pdsgroup.PdsGroup):
             self.insert_group(thing)
 
-        elif isinstance(thing, pdsfile.PdsFile):
+        elif isinstance(thing, pdsfile.Pds3File) or isinstance(thing, pdsfile.Pds4File):
             self.insert_file(thing)
 
         else:
@@ -444,7 +449,7 @@ class PdsGroupTable(object):
         # Exclusions list can be given as PdsFiles, logical paths, or abspaths
         new_exclusions = set()
         for item in exclusions:
-            if isinstance(item, pdsfile.PdsFile):
+            if isinstance(item, pdsfile.Pds3File) or isinstance(item, pdsfile.Pds4File):
                 new_exclusions.add(item.logical_path)
             else:
                 new_exclusions.add(item)
@@ -453,7 +458,12 @@ class PdsGroupTable(object):
         table_dict = {}
         for pdsf in pdsfiles:
             if isinstance(pdsf, str):
-                pdsf = pdsfile.PdsFile._from_absolute_or_logical_path(pdsf)
+                for class_name in [pdsfile.Pds3File, pdsfile.Pds4File]:
+                    try:
+                        pdsf = class_name._from_absolute_or_logical_path(pdsf)
+                    except ValueError:
+                        continue
+                    break
 
             if pdsf.logical_path in exclusions: continue
             if pdsf.abspath in exclusions: continue
