@@ -28,6 +28,7 @@ import datetime
 import fnmatch
 import hashlib
 import logging
+import mimetypes
 import psutil
 import pylibmc
 import random
@@ -2089,9 +2090,14 @@ def return_holdings_local(query_path):
         query_path (str): Path under the holdings root.
 
     Returns:
-        Response: File response.
+        Response: File response with appropriate MIME type.
     """
-    return send_file(f'{HOLDINGS_PATHS[0]}/{query_path}', mimetype='text/plain')
+    file_path = f'{HOLDINGS_PATHS[0]}/{query_path}'
+    mimetype, _ = mimetypes.guess_type(file_path)
+    if mimetype:
+        return send_file(file_path, mimetype=mimetype)
+    else:
+        return send_file(file_path)
 
 @app.route('/feedback/<path:query_path>')
 def return_feedback(query_path):
