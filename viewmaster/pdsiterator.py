@@ -84,9 +84,9 @@ class PdsDirIterator(object):
             self.sign = 1
 
         if isinstance(pdsf, pdsfile.Pds3File):
-            pdsf_class = pdsfile.Pds3File
+            pdsf_cls = pdsfile.Pds3File
         elif isinstance(pdsf, pdsfile.Pds4File):
-            pdsf_class = pdsfile.Pds4File
+            pdsf_cls = pdsfile.Pds4File
 
         fnmatch_patterns = pdsf.NEIGHBORS.first(pdsf.logical_path)
         if isinstance(fnmatch_patterns, str):
@@ -98,11 +98,12 @@ class PdsDirIterator(object):
             else:
                 paths = []
                 for fnmatch_pattern in fnmatch_patterns:
-                    abspaths = pdsf_class.glob_glob(pdsf.root_ +
+                    abspaths = pdsf_cls.glob_glob(pdsf.root_ +
                                                          fnmatch_pattern)
-                    abspaths = [pdsfile.repair_case(p) for p in abspaths]
+                    abspaths = [pdsfile.pdsfile.repair_case(p, pdsf_cls)
+                                for p in abspaths]
                     abspaths = [a for a in abspaths if os.path.isdir(a)]
-                    paths += pdsf_class.logicals_for_abspaths(abspaths)
+                    paths += pdsf_cls.logicals_for_abspaths(abspaths)
 
                 # Remove duplicates
                 paths = list(set(paths))
@@ -112,7 +113,7 @@ class PdsDirIterator(object):
                     paths.remove('')
 
                 # Sort based on the rules
-                logical_paths = pdsf_class.sort_logical_paths(paths)
+                logical_paths = pdsf_cls.sort_logical_paths(paths)
                 DIRECTORY_CACHE[fnmatch_patterns] = logical_paths
 
         else:
@@ -125,7 +126,7 @@ class PdsDirIterator(object):
             self.neighbor_index = logical_paths_lc.index(this_path_lc)
         except ValueError:
             logical_paths.append(pdsf.logical_path)
-            logical_paths = pdsf_class.sort_logical_paths(logical_paths)
+            logical_paths = pdsf_cls.sort_logical_paths(logical_paths)
             self.neighbor_index = logical_paths.index(pdsf.logical_path)
 
         self.sign = -1 if sign < 0 else +1
