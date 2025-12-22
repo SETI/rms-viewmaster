@@ -1,5 +1,5 @@
 ``link`` Module
-============================
+===============
 
 .. automodule:: viewmaster.link
     :member-order: bysource

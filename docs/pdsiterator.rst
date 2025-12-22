@@ -1,5 +1,5 @@
 ``pdsiterator`` Module
-============================
+======================
 
 .. automodule:: viewmaster.pdsiterator
     :member-order: bysource

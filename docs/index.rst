@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Welcome to ``viewmaster`` documentation!
-=============================================
+========================================
 
 .. include:: ../README.md
    :parser: myst_parser.sphinx_

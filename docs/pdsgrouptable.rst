@@ -1,5 +1,5 @@
 ``pdsgrouptable`` Module
-============================
+========================
 
 .. automodule:: viewmaster.pdsgrouptable
     :member-order: bysource
