@@ -81,7 +81,7 @@ def link(query_path):
     Directory detection is based on whether the basename has no extension or
     ends with a digit (version suffix like "_v1.0").
 
-    Args:
+    Parameters:
         query_path (str):
             The requested path, which may include query parameters that will be stripped.
 

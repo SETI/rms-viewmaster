@@ -23,7 +23,7 @@ import pdslogger
 def dirs_only(parent_pdsfile, basename):
     """Filter function that only returns directories.
 
-    Args:
+    Parameters:
         parent_pdsfile: Parent PdsFile object, or None.
         basename (str): Basename of the child to check.
 
@@ -65,7 +65,7 @@ class PdsDirIterator(object):
     def __init__(self, pdsf, sign=1, logger=None):
         """Initialize a PdsDirIterator.
 
-        Args:
+        Parameters:
             pdsf: PdsFile representing the starting directory. If None, creates
                 an empty iterator.
             sign (int): Direction of iteration (+1 for forward, -1 for backward).
@@ -139,7 +139,7 @@ class PdsDirIterator(object):
     def copy(self, sign=None):
         """Create a clone of this iterator, optionally with reversed direction.
 
-        Args:
+        Parameters:
             sign (int|None): New direction (+1 forward, -1 backward). If None,
                 preserves the current direction.
 
@@ -260,7 +260,7 @@ class PdsFileIterator(object):
                        logger=None):
         """Initialize a PdsFileIterator.
 
-        Args:
+        Parameters:
             pdsf: PdsFile representing the starting file.
             sign (int): Direction of iteration (+1 for forward, -1 for backward).
             pattern (str|None): Optional fnmatch pattern to match file names.
@@ -323,7 +323,7 @@ class PdsFileIterator(object):
     def _filter_names(self, basenames):
         """Apply pattern matching, exclusion, and custom filters to basenames.
 
-        Args:
+        Parameters:
             basenames (list): List of basenames to filter.
 
         Returns:
@@ -463,7 +463,7 @@ class PdsRowIterator(object):
     def __init__(self, pdsf, sign=1, logger=None):
         """Initialize a PdsRowIterator.
 
-        Args:
+        Parameters:
             pdsf: PdsFile representing the starting file (typically an index row).
             sign (int): Direction of iteration (+1 for forward, -1 for backward).
             logger: Optional logger instance.

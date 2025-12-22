@@ -27,7 +27,7 @@ class PdsGroupTable(object):
     def __init__(self, pdsgroups=None, parent=False):
         """Initialize a PdsGroupTable.
 
-        Args:
+        Parameters:
             pdsgroups (list|None): Initial groups to add.
             parent (Pds3File|bool|None): Common parent; False to derive from
                 the first inserted group; None indicates a merged directory.
@@ -188,7 +188,7 @@ class PdsGroupTable(object):
     def insert_group(self, group, merge=True):
         """Insert a group into the table, optionally merging with existing groups.
 
-        Args:
+        Parameters:
             group (PdsGroup): Group to insert.
             merge (bool): If True and a group with the same anchor exists,
                 merge members into it; otherwise append as a new group.
@@ -224,7 +224,7 @@ class PdsGroupTable(object):
     def insert_file(self, pdsf, hidden=False):
         """Insert a PdsFile into the table, creating or merging into a group.
 
-        Args:
+        Parameters:
             pdsf: PdsFile to insert.
             hidden (bool): If True, mark the file as hidden.
 
@@ -255,7 +255,7 @@ class PdsGroupTable(object):
         Accepts PdsFiles, PdsGroups, PdsGroupTables, or logical/absolute paths.
         Lists and tuples are processed recursively.
 
-        Args:
+        Parameters:
             things: Item(s) to insert. Can be a PdsFile, PdsGroup,
                 PdsGroupTable, logical path string, absolute path string, or
                 list/tuple of any of these.
@@ -305,7 +305,7 @@ class PdsGroupTable(object):
                              info_first=None):
         """Sort members (PdsFiles) within each group (PdsGroup).
 
-        Args:
+        Parameters:
             labels_after (bool|None): Place labels after their targets.
             dirs_first (bool|None): Sort directories before files.
             dirs_last (bool|None): Sort directories after files.
@@ -325,7 +325,7 @@ class PdsGroupTable(object):
                           info_first=None):
         """Sort the groups themselves by their first member's basename.
 
-        Args:
+        Parameters:
             labels_after (bool|None): Place labels after their targets.
             dirs_first (bool|None): Sort directories before files.
             dirs_last (bool|None): Sort directories after files.
@@ -360,7 +360,7 @@ class PdsGroupTable(object):
     def hide_pdsfile(self, pdsf):
         """Hide a PdsFile across all groups in the table.
 
-        Args:
+        Parameters:
             pdsf: PdsFile to hide.
 
         Returns:
@@ -375,7 +375,7 @@ class PdsGroupTable(object):
     def remove_pdsfile(self, pdsf):
         """Remove a PdsFile from all groups in the table.
 
-        Args:
+        Parameters:
             pdsf: PdsFile to remove.
 
         Returns:
@@ -390,7 +390,7 @@ class PdsGroupTable(object):
     def filter(self, regex):
         """Hide files whose basenames do not match the regex pattern.
 
-        Args:
+        Parameters:
             regex (re.Pattern): Compiled regex pattern to match against basenames.
 
         Returns:
@@ -404,7 +404,7 @@ class PdsGroupTable(object):
     def sort_tables(tables):
         """Sort tables by their parent logical paths.
 
-        Args:
+        Parameters:
             tables (list): List of PdsGroupTable objects to sort.
 
         Returns:
@@ -433,7 +433,7 @@ class PdsGroupTable(object):
         Groups files by parent directory, applies sorting rules, and excludes
         specified files. Returns a sorted list of tables.
 
-        Args:
+        Parameters:
             pdsfiles (list): PdsFiles or logical path strings to organize.
             exclusions (set): Logical paths or abspaths to exclude.
             hidden (set): Logical paths to mark as hidden initially.
@@ -532,7 +532,7 @@ class PdsGroupTable(object):
         Reorganizes tables so that index rows sharing a grandparent are
         combined into a single table under that grandparent.
 
-        Args:
+        Parameters:
             tables (list): Sorted list of PdsGroupTable objects, some of which
                 may contain index rows.
 

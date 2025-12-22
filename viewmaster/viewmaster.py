@@ -389,7 +389,7 @@ def initialize_caches(reset=False):
     This preloads `Pds3File` holdings, prepares `Pds3File` caches and optionally clears
     the page cache when it differs from the PdsFile cache backend.
 
-    Args:
+    Parameters:
         reset (bool): If True, clears caches before initializing.
 
     Returns:
@@ -423,7 +423,7 @@ def load_infopage_content(page_pdsfile, hrefs=True):
     Reads a PDS3 text-like file, sanitizes for HTML, and inserts hyperlinks to
     recognized file references found via `internal_link_info` metadata.
 
-    Args:
+    Parameters:
         page_pdsfile (Pds3File): PdsFile instance representing the info page.
         hrefs (bool): If True, insert anchor tags for recognized filenames.
 
@@ -528,7 +528,7 @@ def get_prev_next_navigation(query_pdsfile):
     The target file/dir itself is included as the first element in each list. List sizes
     and text lengths are constrained by `MAX_NAV_COUNT` and `MAX_NAV_STRLEN`.
 
-    Args:
+    Parameters:
         query_pdsfile (Pds3File): PdsFile instance (a file or directory) around which to
             build navigation.
 
@@ -640,7 +640,7 @@ def get_prev_next_navigation(query_pdsfile):
 def list_next_pdsfiles(query_pdsfile):
     """List up to `MAX_PAGES` forward neighbors from a starting target file/dir.
 
-    Args:
+    Parameters:
         query_pdsfile (Pds3File): Starting file or directory.
 
     Returns:
@@ -670,7 +670,7 @@ def list_next_pdsfiles(query_pdsfile):
 def fill_level_navigation_links(page, params):
     """Populate `nav_link` for level navigation hierarchy items.
 
-    Args:
+    Parameters:
         page (dict): Page dictionary being assembled.
         params (dict): Current query parameters.
 
@@ -706,7 +706,7 @@ def fill_level_navigation_links(page, params):
 def fill_prev_next_navigation_links(page, params):
     """Populate `nav_link` for neighbor navigation lists.
 
-    Args:
+    Parameters:
         page (dict): Page dictionary with `prev` and `next` lists.
         params (dict): Current query parameters.
 
@@ -732,7 +732,7 @@ def fill_prev_next_navigation_links(page, params):
 def fill_table_navigation_links(page, params):
     """Populate `webapp_link` for rows across page tables.
 
-    Args:
+    Parameters:
         page (dict): Page dictionary with `tables`, `associations`, `documents`.
         params (dict): Current query parameters.
 
@@ -775,7 +775,7 @@ def fill_table_navigation_links(page, params):
 def get_parallels(query_pdsfile):
     """Find parallel files/dirs in other trees and versions for a target file/dir.
 
-    Args:
+    Parameters:
         query_pdsfile (Pds3File): The target file or directory.
 
     Returns:
@@ -842,7 +842,7 @@ def fill_parallels_navigation_links(page, params):
 
     Includes the filter when safe for same-depth categories.
 
-    Args:
+    Parameters:
         page (dict): Page dictionary with `parallels`.
         params (dict): Current query parameters.
 
@@ -884,7 +884,7 @@ def fill_parallels_navigation_links(page, params):
 def fill_option_links(page, params):
     """Define URLs for display options (grid, multipage, continuous).
 
-    Args:
+    Parameters:
         page (dict): Page dictionary to annotate.
         params (dict): Current query parameters.
 
@@ -948,7 +948,7 @@ def get_directory_page(query_pdsfile):
 
     The dictionary includes various info for rendering the target dir.
 
-    Args:
+    Parameters:
         query_pdsfile (Pds3File): Directory to display.
 
     Returns:
@@ -1025,7 +1025,7 @@ def get_directory_page(query_pdsfile):
 def directory_page_html(query_pdsfile, params):
     """Render a directory view to HTML.
 
-    Args:
+    Parameters:
         query_pdsfile (Pds3File): Directory to display.
         params (dict): Cleaned query parameters.
 
@@ -1246,7 +1246,7 @@ def get_product_page_info(query_pdsfile):
 
     The dictionary includes various info for rendering the target file.
 
-    Args:
+    Parameters:
         query_pdsfile (Pds3File): File (or index row) to display.
 
     Returns:
@@ -1413,7 +1413,7 @@ def get_product_page_info(query_pdsfile):
 def product_page_html(query_pdsfile, params):
     """Render a product view to HTML.
 
-    Args:
+    Parameters:
         query_pdsfile (Pds3File): Product to display.
         params (dict): Cleaned query parameters.
 
@@ -1627,7 +1627,7 @@ def format_row_value(value, mask, add_comment=True):
     Handles tuples, masked values, and strings. For masked values, the original
     value can be included as an HTML comment.
 
-    Args:
+    Parameters:
         value (Any): The index-row value or tuple of values.
         mask (bool|sequence[bool]): Mask flag(s) for the value(s).
         add_comment (bool): Whether to include the unmasked value as a comment.
@@ -1672,7 +1672,7 @@ def format_row_value(value, mask, add_comment=True):
 def format_tuple(values, masks):
     """Format a tuple of values with masks into HTML parts.
 
-    Args:
+    Parameters:
         values (sequence): Values to format.
         masks (sequence[bool]): Mask flags for each value.
 
@@ -1715,7 +1715,7 @@ def get_query_params_from_request():
 def get_query_params_from_url(url):
     """Extract parameters from a URL string and normalize them.
 
-    Args:
+    Parameters:
         url (str): Full or partial URL containing a query string.
 
     Returns:
@@ -1747,7 +1747,7 @@ def get_query_params_from_dict(params):
     Removes unknown keys and applies defaults for missing values, then cleans
     and types each value similarly to other parameter helpers.
 
-    Args:
+    Parameters:
         params (dict): Raw parameter dictionary.
 
     Returns:
@@ -1784,7 +1784,7 @@ def clean_query_params(old_params):
     Applies bounds and typing to grid, paging, filtering, and selection
     parameters.
 
-    Args:
+    Parameters:
         old_params (dict): Raw parameters as strings/None.
 
     Returns:
@@ -1904,7 +1904,7 @@ def set_filter_in_params(params, filter):
     Converts a user filter pattern into a safe URL form and a compiled regex
     when valid; otherwise clears the filter-related fields.
 
-    Args:
+    Parameters:
         params (dict): Parameters to modify in-place.
         filter (str): Filter pattern from user input.
 
@@ -1953,7 +1953,7 @@ def url_params(params, selection=None):
     Skips parameters that are at default values and optionally overrides the
     selection anchor.
 
-    Args:
+    Parameters:
         params (dict): Clean parameters.
         selection (str|None): Optional replacement selection anchor.
 
@@ -2011,7 +2011,7 @@ FILTER_REGEX = re.compile(r'^(\w+|\?+|\*+|\-+|\.|\[(\w+|\-)+])+$')
 def pattern_validator(field):
     """WTForms validator for the file-name filter pattern.
 
-    Args:
+    Parameters:
         field (wtforms.Field): Field being validated.
 
     Raises:
@@ -2074,7 +2074,7 @@ def set_filter():
 def return_icons_local(query_path):
     """Serve local icon PNGs when running without Apache static routing.
 
-    Args:
+    Parameters:
         query_path (str): Relative icon path under `icons/`.
 
     Returns:
@@ -2086,7 +2086,7 @@ def return_icons_local(query_path):
 def return_holdings_local(query_path):
     """Serve holdings files directly when running locally.
 
-    Args:
+    Parameters:
         query_path (str): Path under the holdings root.
 
     Returns:
@@ -2103,7 +2103,7 @@ def return_holdings_local(query_path):
 def return_feedback(query_path):
     """Redirect to the external feedback page.
 
-    Args:
+    Parameters:
         query_path (str): Path suffix after `/feedback/`.
 
     Returns:
@@ -2122,7 +2122,7 @@ def viewmaster(query_path):
 
     Applies caching, normalizes the URL, and renders the appropriate view.
 
-    Args:
+    Parameters:
         query_path (str): Logical PDS path with optional query string.
 
     Returns:
@@ -2443,7 +2443,7 @@ def hexdigest():
 def trim_html(html):
     """Minify HTML by trimming whitespace outside of <pre> blocks.
 
-    Args:
+    Parameters:
         html (str): Raw HTML string.
 
     Returns:

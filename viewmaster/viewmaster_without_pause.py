@@ -213,7 +213,7 @@ def validate_holdings_paths(abspaths):
 
     A missing directory is logged as a warning, not an error.
 
-    Args:
+    Parameters:
         abspaths (list[str]): List of absolute paths to validate.
 
     Returns:
@@ -258,7 +258,7 @@ def validate_holdings_paths(abspaths):
 def create_holdings_symlinks(abspaths):
     """Create the "holdings*" symlinks inside /Library/WebServer/Documents.
 
-    Args:
+    Parameters:
         abspaths (list[str]): List of absolute paths to holdings directories.
 
     Returns:
@@ -392,7 +392,7 @@ def initialize_caches(reset=False):
     This preloads PdsFile holdings, prepares PdsFile caches and optionally clears
     the page cache when it differs from the PdsFile cache backend.
 
-    Args:
+    Parameters:
         reset (bool): If True, clears caches before initializing.
 
     Returns:
@@ -422,7 +422,7 @@ def load_infopage_content(page_pdsfile, hrefs=True):
     """Reads the given PDS3 file. Inserts HTML links in front of any
     recognized file names. Returns a list of OS paths to any referenced files.
 
-    Args:
+    Parameters:
         page_pdsfile (PdsFile): PdsFile instance representing the info page.
         hrefs (bool): If True, insert anchor tags for recognized filenames.
 
@@ -532,7 +532,7 @@ def get_prev_next_navigation(query_pdsfile):
     List sizes and text lengths are constrained by `MAX_NAV_COUNT` and
     `MAX_NAV_STRLEN`.
 
-    Args:
+    Parameters:
         query_pdsfile (PdsFile): PdsFile instance (a file or directory) around
             which to build navigation.
 
@@ -641,7 +641,7 @@ def get_prev_next_navigation(query_pdsfile):
 def list_next_pdsfiles(query_pdsfile):
     """List up to `MAX_PAGES` forward neighbors from a starting target file/dir.
 
-    Args:
+    Parameters:
         query_pdsfile (PdsFile): Starting file or directory.
 
     Returns:
@@ -678,7 +678,7 @@ def fill_level_navigation_links(page, params):
     Otherwise, the values of some parameters, such as "filter" and "selection",
     will change depending on the item.
 
-    Args:
+    Parameters:
         page (dict): Page dictionary being assembled.
         params (dict): Current query parameters.
 
@@ -719,7 +719,7 @@ def fill_prev_next_navigation_links(page, params):
     means it is not a link. Otherwise, the values of some parameters such as
     "selection" will change depending on the item.
 
-    Args:
+    Parameters:
         page (dict): Page dictionary with `prev` and `next` lists.
         params (dict): Current query parameters.
 
@@ -749,7 +749,7 @@ def fill_table_navigation_links(page, params):
     presence or absence of certain URL parameters, such as "selection",
     "filter", and "pages", could change depending on context.
 
-    Args:
+    Parameters:
         page (dict): Page dictionary with `tables`, `associations`, `documents`.
         params (dict): Current query parameters.
 
@@ -798,7 +798,7 @@ def get_parallels(query_pdsfile):
     also contains items keyed "next", "prev" and "latest" for items with
     multiple versions.
 
-    Args:
+    Parameters:
         query_pdsfile (PdsFile): The target file or directory.
 
     Returns:
@@ -865,7 +865,7 @@ def fill_parallels_navigation_links(page, params):
     trees. Whether or not certain URL parameters like "filter" are included
     in these URLs depends on context.
 
-    Args:
+    Parameters:
         page (dict): Page dictionary with `parallels`.
         params (dict): Current query parameters.
 
@@ -907,7 +907,7 @@ def fill_parallels_navigation_links(page, params):
 def fill_option_links(page, params):
     """Define URLs for display options (grid, multipage, continuous).
 
-    Args:
+    Parameters:
         page (dict): Page dictionary to annotate.
         params (dict): Current query parameters.
 
@@ -972,7 +972,7 @@ def get_directory_page(query_pdsfile):
     The dictionary contains key parameters needed to render the directory
     page in Viewmaster.
 
-    Args:
+    Parameters:
         query_pdsfile (PdsFile): Directory to display.
 
     Returns:
@@ -1049,7 +1049,7 @@ def get_directory_page(query_pdsfile):
 def directory_page_html(query_pdsfile, params):
     """Construct the page dictionary and return the HTML page for a directory.
 
-    Args:
+    Parameters:
         query_pdsfile (PdsFile): Directory to display.
         params (dict): Cleaned query parameters.
 
@@ -1263,7 +1263,7 @@ def get_product_page_info(query_pdsfile):
 
     The dictionary contains key parameters needed to render a product page in Viewmaster.
 
-    Args:
+    Parameters:
         query_pdsfile (PdsFile): File (or index row) to display.
 
     Returns:
@@ -1384,7 +1384,7 @@ def get_product_page_info(query_pdsfile):
 def product_page_html(query_pdsfile, params):
     """Construct the product page dictionary and return the HTML page for a product.
 
-    Args:
+    Parameters:
         query_pdsfile (PdsFile): Product to display.
         params (dict): Cleaned query parameters.
 
@@ -1592,7 +1592,7 @@ def format_row_value(value, mask, add_comment=True):
     index row. It handles the formatting of tuples and masked values. Masked
     values are indicated by an HTML comment.
 
-    Args:
+    Parameters:
         value (Any): The index-row value or tuple of values.
         mask (bool|sequence[bool]): Mask flag(s) for the value(s).
         add_comment (bool): Whether to include the unmasked value as a comment.
@@ -1637,7 +1637,7 @@ def format_row_value(value, mask, add_comment=True):
 def format_tuple(values, masks):
     """Format a tuple of values with masks into HTML parts.
 
-    Args:
+    Parameters:
         values (sequence): Values to format.
         masks (sequence[bool]): Mask flags for each value.
 
@@ -1679,7 +1679,7 @@ def get_query_params_from_request():
 def get_query_params_from_url(url):
     """Return a param dictionary based on the query args.
 
-    Args:
+    Parameters:
         url (str): Full or partial URL containing a query string.
 
     Returns:
@@ -1711,7 +1711,7 @@ def get_query_params_from_dict(params):
     Removes unknown keys and applies defaults for missing values, then cleans
     and types each value similarly to other parameter helpers.
 
-    Args:
+    Parameters:
         params (dict): Raw parameter dictionary.
 
     Returns:
@@ -1748,7 +1748,7 @@ def clean_query_params(old_params):
     Applies bounds and typing to grid, paging, filtering, and selection
     parameters.
 
-    Args:
+    Parameters:
         old_params (dict): Raw parameters as strings/None.
 
     Returns:
@@ -1868,7 +1868,7 @@ def set_filter_in_params(params, filter):
     Converts a user filter pattern into a safe URL form and a compiled regex
     when valid; otherwise clears the filter-related fields.
 
-    Args:
+    Parameters:
         params (dict): Parameters to modify in-place.
         filter (str): Filter pattern from user input.
 
@@ -1916,7 +1916,7 @@ def url_params(params, selection=None):
     Skips parameters that are at default values and optionally overrides the
     selection anchor.
 
-    Args:
+    Parameters:
         params (dict): Clean parameters.
         selection (str|None): Optional replacement selection anchor.
 
@@ -1974,7 +1974,7 @@ FILTER_REGEX = re.compile(r'^(\w+|\?+|\*+|\-+|\.|\[(\w+|\-)+])+$')
 def pattern_validator(field):
     """WTForms validator for the file-name filter pattern.
 
-    Args:
+    Parameters:
         field (wtforms.Field): Field being validated.
 
     Raises:
@@ -2039,7 +2039,7 @@ def viewmaster(query_path):
 
     Applies caching, normalizes the URL, and renders the appropriate view.
 
-    Args:
+    Parameters:
         query_path (str): Logical PDS path with optional query string.
 
     Returns:
@@ -2335,7 +2335,7 @@ def hexdigest():
 def trim_html(html):
     """Minify HTML by trimming whitespace outside of <pre> blocks.
 
-    Args:
+    Parameters:
         html (str): Raw HTML string.
 
     Returns:

@@ -33,7 +33,7 @@ class PdsGroup(object):
     def __init__(self, pdsfiles=None, parent=False, anchor=None, hidden=None):
         """PdsGroup constructor.
 
-        Args:
+        Parameters:
             pdsfiles (list|tuple|Pds3File|None): An ordered list of PdsFiles. Can be
                 empty, which means the PdsGroup does not yet have any members.
             parent (Pds3File|bool|None): The common parent of all the PdsFiles.
@@ -297,7 +297,7 @@ class PdsGroup(object):
                    info_first=None):
         """Sort the rows of this group.
 
-        Args:
+        Parameters:
             labels_after (bool|None): Place labels after their targets.
             dirs_first (bool|None): Sort directories before files.
             dirs_last (bool|None): Sort directories after files.
@@ -351,7 +351,7 @@ class PdsGroup(object):
                    info_first=None):
         """Sort member files by parent-defined rules with tweaks for labels.
 
-        Args:
+        Parameters:
             labels_after (bool|None): Place labels after their targets.
             dirs_first (bool|None): Sort directories before files.
             dirs_last (bool|None): Sort directories after files.
@@ -405,7 +405,7 @@ class PdsGroup(object):
     def append(self, pdsf, hidden=False):
         """Append a PdsFile to the group, ensuring parent and anchor match.
 
-        Args:
+        Parameters:
             pdsf: PdsFile to add.
             hidden (bool): If True, mark as hidden.
 
@@ -455,7 +455,7 @@ class PdsGroup(object):
         """Remove the PdsFile from this PdsGroup. Return True if the PdsFile
         was removed, False if it is not a member.Remove a PdsFile from the group.
 
-        Args:
+        Parameters:
             pdsf: PdsFile to remove.
 
         Returns:
@@ -475,7 +475,7 @@ class PdsGroup(object):
         """Hide the PdsFile in this PdsGroup. Return True if the PdsFile was
         hidden, False if it is not a member.
 
-        Args:
+        Parameters:
             pdsf: PdsFile to hide.
 
         Returns:
@@ -504,7 +504,7 @@ class PdsGroup(object):
         """Unhide the PdsFile in this PdsGroup. Return True if the PdsFile was
         un-hidden, False if it is not a member.
 
-        Args:
+        Parameters:
             pdsf: PdsFile to unhide.
 
         Returns:
@@ -559,7 +559,7 @@ class PdsGroup(object):
     def group_children(pdsf, basenames=None):
         """Group a directory's children by anchor into a list of PdsGroup objects.
 
-        Args:
+        Parameters:
             pdsf: Parent PdsFile whose children to group.
             basenames (list|None): Optional subset of basenames to include.
 
