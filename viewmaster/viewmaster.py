@@ -182,10 +182,6 @@ UNVIEWABLE_EXTENSIONS = set(['.zip', '.tar.gz', '.tar', '.tgz', '.jar'])
 ################################################################################
 
 BOOT_TIME = psutil.boot_time()
-# If the system has just rebooted, we won't wait for a possible
-# remote mount of the  holdings directory during validate_holdings_paths.
-if len(sys.argv) > 1 and ('--no-boot-time' in sys.argv[1] or '--nbt' in sys.argv[1]):
-    BOOT_TIME = None
 
 # XXX WHY DO WE ALLOW A LIST OF HOLDINGS PATHS INSTEAD OF A SINGLE PATH?
 # We get the holdings path from PDS3_HOLDINGS environment variable
@@ -226,17 +222,15 @@ def validate_holdings_paths(abspaths):
     for abspath in abspaths:
 
         # If the system has just rebooted, wait for a possible remote mount.
-        # If BOOT_TIME is None, we don't wait for the remote mount.
-        if BOOT_TIME is not None:
-            iter = 0
-            while time.time() - BOOT_TIME < 120:
-                parent = os.path.split(abspath)[0]
-                if os.path.exists(parent) and 'holdings' in os.listdir(parent):
-                    break
+        iter = 0
+        while time.time() - BOOT_TIME < 120:
+            parent = os.path.split(abspath)[0]
+            if os.path.exists(parent) and 'holdings' in os.listdir(parent):
+                break
 
-                LOGGER.warn('Holdings not found, pausing', abspath)
-                time.sleep((os.getpid() + iter) % 5. + 0.9 * random.random())
-                iter += 1
+            LOGGER.warn('Holdings not found, pausing', abspath)
+            time.sleep((os.getpid() + iter) % 5. + 0.9 * random.random())
+            iter += 1
 
         abspath = abspath.rstrip('/')
         abspath = os.path.realpath(abspath)
