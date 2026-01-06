@@ -1,19 +1,15 @@
 <!-- start-after-point -->
-# Viewmaster
 
 | PyPI Release | Test Status | Code Coverage |
 |--------------|-------------|----------------|
 | [![PyPI version](https://badge.fury.io/py/rms-viewmaster.svg)](https://badge.fury.io/py/rms-viewmaster) | [![Build status](https://img.shields.io/github/actions/workflow/status/SETI/rms-viewmaster/run-app-tests.yml?branch=main)](https://github.com/SETI/rms-viewmaster/actions) | [![Code coverage](https://img.shields.io/codecov/c/github/SETI/rms-viewmaster/main?logo=codecov)](https://codecov.io/gh/SETI/rms-viewmaster) |
 
-## 🚀 Overview
+# Introduction
 
-**Viewmaster** is a web‑based file and document viewer and management tool. It focuses on handling and displaying various types of PDS documents and folders.
+`Viewmaster` is a web‑based file and document viewer and management tool. It focuses on handling and displaying various types of PDS documents and folders.
 
----
-
-# Running Viewmaster
-
-## 🛠️ Environment Setup (first‑time only)
+# Getting Started
+Environment Setup (first‑time only)
 
 1. Clone the repository:
 
@@ -39,9 +35,7 @@
    sudo chown -R user /Library/WebServer   # Replace "user" with your own username
    ```
 
----
-
-## ▶️ Running Locally
+Running Locally
 
 1. Start the server at the root of the repo:
    ```bash
@@ -52,3 +46,16 @@
 
    <http://127.0.0.1:8080/>
    *(This corresponds to `VIEWMASTER_PREFIX_` in `viewmaster_config.py`.)*
+
+# Contributing
+
+Information on contributing to this package can be found in the
+[Contributing Guide](https://github.com/SETI/rms-viewmaster/blob/main/CONTRIBUTING.md).
+
+# Links
+<!-- Update the readthedocs link once the branch merged into main -->
+- [Documentation](https://rms-viewmaster.readthedocs.io/en/clean_up_viewmaster/)
+- [Repository](https://github.com/SETI/rms-viewmaster)
+- [Issue tracker](https://github.com/SETI/rms-viewmaster/issues)
+<!-- Add this once we make pip install working -->
+<!-- - [PyPi](https://pypi.org/project/rms-viewmaster) -->
