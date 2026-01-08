@@ -89,11 +89,14 @@ info_logfile = os.path.abspath(LOG_FILE)
 if sys.stdin.isatty():
     LOGGER.add_handler(pdslogger.stdout_handler)
 else:  # don't do this when testing in interactive mode
+    info_handler = pdslogger.file_handler(info_logfile, level=logging.INFO,
+                                        rotation='midnight')
+    LOGGER.add_handler(info_handler)
     # Bypass the permission error when using read the docs to build the documents
-    if not ON_RTD:
-        info_handler = pdslogger.file_handler(info_logfile, level=logging.INFO,
-                                            rotation='midnight')
-        LOGGER.add_handler(info_handler)
+    # if not ON_RTD:
+        # info_handler = pdslogger.file_handler(info_logfile, level=logging.INFO,
+        #                                     rotation='midnight')
+        # LOGGER.add_handler(info_handler)
 
 DEBUG_LOG_FILE = LOG_ROOT_PREFIX_ + 'viewmaster_debug.log'
 
@@ -262,62 +265,6 @@ def validate_holdings_paths(abspaths):
 
     return valid_abspaths
 
-def create_holdings_symlinks(abspaths):
-    """Create the "holdings*" symlinks inside /<webroot>/Documents."""
-
-    symlinked_abspaths = []
-    for k, abspath in enumerate(abspaths):
-        symlink = DOCUMENT_ROOT_ + 'holdings' + (str(k) if k else '')
-        symlinked = False
-        if os.path.islink(symlink):         # exists and is a symlink
-            realpath = os.path.realpath(symlink)
-            realpath = os.path.abspath(realpath)
-
-            if realpath == abspath:
-                LOGGER.info('Symlink already exists for ' + realpath, symlink)
-                symlinked = True
-                symlinked_abspaths.append(abspath)
-
-            else:                           # points to the wrong dir
-                try:
-                    os.remove(symlink)
-                except OSError:
-                    LOGGER.error('Cannot remove outdated symlink for ' +
-                                 abspath, symlink)
-                    continue
-
-        elif os.path.exists(symlink):       # exists but is not a symlink
-            LOGGER.error('Cannot create symlink, file exists: ' + symlink)
-            continue
-
-        if not symlinked:
-            if MAKE_SYMLINKS:
-                try:
-                    os.symlink(abspath, symlink)
-                except OSError:
-                    raise IOError('Unable to create symlink: ' + symlink)
-                else:
-                    symlinked_abspaths.append(abspath)
-
-            else:
-                LOGGER.error('No symlink for ' + abspath, symlink)
-
-    if not symlinked_abspaths:
-        raise IOError('No holdings paths could be symlinked')
-
-    for k in range(len(abspaths), 10):
-        symlink = DOCUMENT_ROOT_ + 'holdings' + str(k)
-
-        if os.path.islink(symlink):         # exists and is a symlink
-            try:
-                os.remove(symlink)
-            except OSError:
-                LOGGER.error('Cannot remove outdated symlink', symlink)
-
-        elif os.path.exists(symlink):       # exists but is not a symlink
-            LOGGER.error('File exists: ' + symlink)
-
-    return symlinked_abspaths
 
 ################################################################################
 ################################################################################
