@@ -39,33 +39,40 @@ app = Flask(__name__)
 
 from .viewmaster_config import *
 
-LOGNAME = LOGNAME.replace('viewmaster', 'link')
-LOGGER = pdslogger.PdsLogger(LOGNAME, limits={'info': -1, 'normal': -1},
-                                      pid=True)
+def create_logger():
+    LOGNAME = LOGNAME.replace('viewmaster', 'link')
+    LOGGER = pdslogger.PdsLogger(LOGNAME, limits={'info': -1, 'normal': -1},
+                                        pid=True)
 
-LOG_FILE = LOG_ROOT_PREFIX_ + 'link.log'
-info_logfile = os.path.abspath(LOG_FILE)
-# Bypass the permission error when using read the docs to build the documents
-try:
+    LOG_FILE = LOG_ROOT_PREFIX_ + 'link.log'
+    info_logfile = os.path.abspath(LOG_FILE)
     info_handler = pdslogger.file_handler(info_logfile, level=logging.INFO,
-                                        rotation='midnight')
+                                            rotation='midnight')
     LOGGER.add_handler(info_handler)
-except PermissionError:
-    LOGGER.warn('Unable to open log file for link service; continuing without '
-                'file handler', info_logfile)
-    pass
+    # Bypass the permission error when using read the docs to build the documents
+    # try:
+    #     info_handler = pdslogger.file_handler(info_logfile, level=logging.INFO,
+    #                                         rotation='midnight')
+    #     LOGGER.add_handler(info_handler)
+    # except PermissionError:
+    #     LOGGER.warn('Unable to open log file for link service; continuing without '
+    #                 'file handler', info_logfile)
+    #     pass
 
-# DEBUG_LOG_FILE = LOG_ROOT_PREFIX_ + 'link_debug.log'
-# debug_logfile = os.path.abspath(DEBUG_LOG_FILE)
-# debug_handler = pdslogger.file_handler(debug_logfile, level=logging.DEBUG,
-#                                        rotation='midnight')
-# LOGGER.add_handler(debug_handler)
+    # DEBUG_LOG_FILE = LOG_ROOT_PREFIX_ + 'link_debug.log'
+    # debug_logfile = os.path.abspath(DEBUG_LOG_FILE)
+    # debug_handler = pdslogger.file_handler(debug_logfile, level=logging.DEBUG,
+    #                                        rotation='midnight')
+    # LOGGER.add_handler(debug_handler)
 
-################################################################################
+    ################################################################################
 
-LOGGER.blankline()
-LOGGER.blankline()
-LOGGER.info('Starting Link', info_logfile)
+    LOGGER.blankline()
+    LOGGER.blankline()
+    LOGGER.info('Starting Link', info_logfile)
+
+    return LOGGER
+
 
 @app.route('/', defaults={'query_path': 'volumes'})
 @app.route('/<path:query_path>')
@@ -96,7 +103,7 @@ def link(query_path):
 
     """
 
-    global LOGGER
+    LOGGER = create_logger()
 
     original_query_path = query_path
     query_path = query_path.split('?')[0]
