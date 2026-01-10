@@ -296,15 +296,22 @@ def validate_holdings_paths(abspaths, logger):
 def get_holdings_path(logger):
 
     # Get the holdings paths
-    if ON_RTD: # Put a placeholder value when running on read the docs
-        paths = ['holdings']
-    else:
-        try:
-            paths = get_holdings_paths()
-            paths = validate_holdings_paths(paths, logger)
-        except Exception as e:
-                logger.exception(e)
-                sys.exit(1)
+    # if ON_RTD: # Put a placeholder value when running on read the docs
+    #     paths = ['holdings']
+    # else:
+    #     try:
+    #         paths = get_holdings_paths()
+    #         paths = validate_holdings_paths(paths, logger)
+    #     except Exception as e:
+    #         logger.exception(e)
+    #         sys.exit(1)
+
+    try:
+        paths = get_holdings_paths()
+        paths = validate_holdings_paths(paths, logger)
+    except Exception as e:
+        logger.exception(e)
+        sys.exit(1)
 
     assert len(paths) == 1
     HOLDINGS_PATHS = paths
@@ -374,8 +381,8 @@ def initialize_caches(reset=False, logger=None):
     PAGE_CACHE = get_page_cache(logger)
 
     # We skip preload when running on read the docs
-    if ON_RTD:
-        return
+    # if ON_RTD:
+    #     return
 
     logger.replace_root(HOLDINGS_PATHS)
     print(VIEWMASTER_PREFIX_+ICON_URL_)
