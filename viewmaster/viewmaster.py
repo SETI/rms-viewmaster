@@ -336,7 +336,7 @@ def get_page_cache(logger):
 # common MemCache.
 ################################################################################
 
-def initialize_caches(reset=False, logger=None):
+def initialize_caches(reset=False):
     """Initialize the caches.
 
     This preloads `Pds3File` holdings, prepares `Pds3File` caches and optionally clears
@@ -350,12 +350,11 @@ def initialize_caches(reset=False, logger=None):
     """
 
     global LOGGER
-    logger = LOGGER
 
-    HOLDINGS_PATHS = get_holdings_path(logger)
-    PAGE_CACHE = get_page_cache(logger)
+    HOLDINGS_PATHS = get_holdings_path(LOGGER)
+    PAGE_CACHE = get_page_cache(LOGGER)
 
-    logger.replace_root(HOLDINGS_PATHS)
+    LOGGER.replace_root(HOLDINGS_PATHS)
     print(VIEWMASTER_PREFIX_+ICON_URL_)
     Pds3File.preload(HOLDINGS_PATHS, port=PDSFILE_MEMCACHE_PORT,
                      clear=reset, icon_url=ICON_URL_)
@@ -2087,7 +2086,6 @@ def viewmaster(query_path):
     """
 
     global LOGGER
-    logger = LOGGER
 
     # This can happen during testing
     if query_path.endswith('favicon.ico'): return ''
@@ -2101,7 +2099,7 @@ def viewmaster(query_path):
     suffix = url_params(params)
     key = '#' + query_path + suffix
 
-    PAGE_CACHE = get_page_cache(logger)
+    PAGE_CACHE = get_page_cache(LOGGER)
 
     # Return page from cache if available
     if PAGE_CACHE:
@@ -2109,14 +2107,14 @@ def viewmaster(query_path):
             html = zlib.decompress(PAGE_CACHE[key]).decode('utf-8', 'ignore')
 
             # Log query
-            logger.info('Request: %s (from cache)' % key[1:])
+            LOGGER.info('Request: %s (from cache)' % key[1:])
             return html
 
         except KeyError:
             pass
 
         except Exception as e:
-            logger.exception(e)
+            LOGGER.exception(e)
             pass
 
     # Generate page
@@ -2140,15 +2138,15 @@ def viewmaster(query_path):
             elapsed = (datetime.datetime.now() - start_time).total_seconds()
             seconds = (' ' + int(elapsed)*'#').rstrip()
 
-            logger.info('Redirecting to new target %s: %s (%5.3fs)%s' %
+            LOGGER.info('Redirecting to new target %s: %s (%5.3fs)%s' %
                         (new_query_path, key[1:], elapsed, seconds))
             return redirect(VIEWMASTER_PREFIX_ + new_query_path)
 
         # Otherwise, generate page
         if query_pdsfile.isdir:
-            response = directory_page_html(query_pdsfile, params, logger)
+            response = directory_page_html(query_pdsfile, params, LOGGER)
         else:
-            response = product_page_html(query_pdsfile, params, logger)
+            response = product_page_html(query_pdsfile, params, LOGGER)
 
         # Check for possible redirect
         if isinstance(response, tuple):
@@ -2156,7 +2154,7 @@ def viewmaster(query_path):
             elapsed = (datetime.datetime.now() - start_time).total_seconds()
             seconds = (' ' + int(elapsed)*'#').rstrip()
 
-            logger.info('Redirecting for new params %s: %s (%5.3fs)%s' %
+            LOGGER.info('Redirecting for new params %s: %s (%5.3fs)%s' %
                         (key[1:], new_query_path, elapsed, seconds))
             return redirect(VIEWMASTER_PREFIX_ + new_query_path)
 
@@ -2171,34 +2169,34 @@ def viewmaster(query_path):
         elapsed = (datetime.datetime.now() - start_time).total_seconds()
         seconds = (' ' + int(elapsed)*'#').rstrip()
 
-        logger.info('Request: %s (%5.3fs)%s' % (key[1:], elapsed, seconds))
+        LOGGER.info('Request: %s (%5.3fs)%s' % (key[1:], elapsed, seconds))
 
         return html
 
     except Exception as e:
-        logger.exception(e, original_query_path, stacktrace=stacktrace)
+        LOGGER.exception(e, original_query_path, stacktrace=stacktrace)
 
         # Log query failure
-        logger.warn('File not found', original_query_path)
+        LOGGER.warn('File not found', original_query_path)
 
         # Log the referring page if available
         http_referrer = os.environ.get('HTTP_REFERER','')
         if http_referrer:
-            logger.info('Referring page: ' + http_referrer)
+            LOGGER.info('Referring page: ' + http_referrer)
 
         # Try to return a fancy index; this works if the file exists and will
         # fail otherwise
         if query_pdsfile is not None:
             try:
                 url = query_pdsfile.html_root_ + query_pdsfile.logical_path
-                logger.info('Returning fancy index', url)
+                LOGGER.info('Returning fancy index', url)
                 return redirect(url + '?viewmaster_referrer=' + http_referrer)
             except Exception:
-                logger.warn('Fancy index unavailable; abort(404)')
+                LOGGER.warn('Fancy index unavailable; abort(404)')
                 pass
 
         # Return a 404 page but don't abort the process!
-        logger.warn('ABORT 404')
+        LOGGER.warn('ABORT 404')
         return render_template('error.html', query_parts=query_parts), 404
 
     finally:
@@ -2225,13 +2223,12 @@ def build_cache():
     """
 
     global LOGGER
-    logger = LOGGER
 
     # When the page is first loaded, request.method == "GET"
     # Upon filling in the password and clicking on "Enter", method == "POST"
 
     if request.method == 'GET':
-        logger.info('Viewmaster cache builder page loaded')
+        LOGGER.info('Viewmaster cache builder page loaded')
         return render_template('build_cache.html')
 
     try:
@@ -2240,16 +2237,16 @@ def build_cache():
         hasher.update(SALT)
         hasher.update(bytes(password, 'latin-1'))
         if hasher.hexdigest() == DIGEST:
-            initialize_caches(reset=False, logger=logger)
-            fill_page_cache(logger)
-            logger.info('Viewmaster cache building completed')
+            initialize_caches(reset=False)
+            fill_page_cache(LOGGER)
+            LOGGER.info('Viewmaster cache building completed')
             return 'Viewmaster cache building completed'
         else:
-            logger.error('Viewmaster cache building canceled')
+            LOGGER.error('Viewmaster cache building canceled')
             return 'Viewmaster cache building FAILED'
 
     except Exception as e:
-        logger.exception(e, '--build-cache', stacktrace=True)
+        LOGGER.exception(e, '--build-cache', stacktrace=True)
         return 'Viewmaster cache building FAILED'
 
 @app.route('/--build-local-cache', methods=['POST','GET'])
@@ -2261,24 +2258,23 @@ def build_local_cache():
     """
 
     global LOGGER
-    logger = LOGGER
 
     ip_address = str(request.remote_addr)
     if (ip_address.startswith(LOCAL_IP_ADDRESS_A_B_C) or
         (EXTRA_LOCAL_IP_ADDRESS_A_B_C is not None and
          ip_address.startswith(EXTRA_LOCAL_IP_ADDRESS_A_B_C))):
-        logger.info('Viewmaster cache building initiated locally', ip_address)
+        LOGGER.info('Viewmaster cache building initiated locally', ip_address)
         try:
-            initialize_caches(reset=False, logger=logger)
-            fill_page_cache(logger)
-            logger.info('Viewmaster cache building completed')
+            initialize_caches(reset=False)
+            fill_page_cache(LOGGER)
+            LOGGER.info('Viewmaster cache building completed')
             return 'Viewmaster cache building completed'
         except Exception as e:
-            logger.exception(e, '--build-local-cache', stacktrace=True)
+            LOGGER.exception(e, '--build-local-cache', stacktrace=True)
             return 'Viewmaster cache building FAILED'
 
     else:
-        logger.error('Invalid local IP address for building Viewmaster cache',
+        LOGGER.error('Invalid local IP address for building Viewmaster cache',
                      ip_address)
         return 'Viewmaster cache building FAILED'
 
@@ -2358,13 +2354,12 @@ def reset_cache():
     """
 
     global LOGGER
-    logger = LOGGER
 
     # When the page is first loaded, request.method == "GET"
     # Upon filling in the password and clicking on "Enter", method == "POST"
 
     if request.method == 'GET':
-        logger.info('Viewmaster cache reset page loaded')
+        LOGGER.info('Viewmaster cache reset page loaded')
         return render_template('reset_cache.html')
 
     try:
@@ -2373,15 +2368,15 @@ def reset_cache():
         hasher.update(SALT)
         hasher.update(bytes(password, 'latin-1'))
         if hasher.hexdigest() == DIGEST:
-            initialize_caches(reset=True, logger=logger)
-            logger.info('Viewmaster cache reset completed')
+            initialize_caches(reset=True)
+            LOGGER.info('Viewmaster cache reset completed')
             return 'Viewmaster cache reset completed'
         else:
-            logger.error('Viewmaster cache reset canceled')
+            LOGGER.error('Viewmaster cache reset canceled')
             return 'Viewmaster cache reset FAILED'
 
     except Exception as e:
-        logger.exception(e, '--reset-cache', stacktrace=True)
+        LOGGER.exception(e, '--reset-cache', stacktrace=True)
         return 'Viewmaster cache reset FAILED'
 
 ################################################################################
@@ -2446,7 +2441,7 @@ if __name__ == "__main__":
     logger = create_logger()
     pdsviewable.load_icons(path=ICON_ROOT_, url=ICON_URL_, color=ICON_COLOR,
                            logger=logger)
-    initialize_caches(reset=False, logger=logger)
+    initialize_caches(reset=False)
     app.run(host='0.0.0.0', port=8080, debug=True)
 
 ################################################################################
