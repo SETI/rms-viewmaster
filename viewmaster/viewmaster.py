@@ -56,9 +56,6 @@ app.secret_key = "Cassini Grand Finale!"    # needed by flask_wtf
 LOCAL_IP_ADDRESS = socket.gethostbyname(socket.gethostname())
 LOCAL_IP_ADDRESS_A_B_C = LOCAL_IP_ADDRESS.rpartition('.')[0] + '.'
 
-# Check if it's running on read the docs
-ON_RTD = os.environ.get('READTHEDOCS', 'False') == 'True'
-
 ################################################################################
 # These are defined in viewmaster_config.py. Values shown here are examples.
 #     LOCALHOST_ = '/'
@@ -99,11 +96,6 @@ def create_logger():
         info_handler = pdslogger.file_handler(info_logfile, level=logging.INFO,
                                             rotation='midnight')
         logger.add_handler(info_handler)
-        # Bypass the permission error when using read the docs to build the documents
-        # if not ON_RTD:
-            # info_handler = pdslogger.file_handler(info_logfile, level=logging.INFO,
-            #                                     rotation='midnight')
-            # logger.add_handler(info_handler)
 
     DEBUG_LOG_FILE = LOG_ROOT_PREFIX_ + 'viewmaster_debug.log'
 
@@ -111,12 +103,6 @@ def create_logger():
     debug_handler = pdslogger.file_handler(debug_logfile, level=logging.DEBUG,
                                             rotation='midnight')
     logger.add_handler(debug_handler)
-    # Bypass the permission error when using read the docs to build the documents
-    # if not ON_RTD:
-    #     debug_logfile = os.path.abspath(DEBUG_LOG_FILE)
-    #     debug_handler = pdslogger.file_handler(debug_logfile, level=logging.DEBUG,
-    #                                         rotation='midnight')
-    #     logger.add_handler(debug_handler)
 
     Pds3File.set_logger(logger)              # Let PdsFile also log
 
@@ -295,17 +281,6 @@ def validate_holdings_paths(abspaths, logger):
 
 def get_holdings_path(logger):
 
-    # Get the holdings paths
-    # if ON_RTD: # Put a placeholder value when running on read the docs
-    #     paths = ['holdings']
-    # else:
-    #     try:
-    #         paths = get_holdings_paths()
-    #         paths = validate_holdings_paths(paths, logger)
-    #     except Exception as e:
-    #         logger.exception(e)
-    #         sys.exit(1)
-
     try:
         paths = get_holdings_paths()
         paths = validate_holdings_paths(paths, logger)
@@ -379,10 +354,6 @@ def initialize_caches(reset=False, logger=None):
 
     HOLDINGS_PATHS = get_holdings_path(logger)
     PAGE_CACHE = get_page_cache(logger)
-
-    # We skip preload when running on read the docs
-    # if ON_RTD:
-    #     return
 
     logger.replace_root(HOLDINGS_PATHS)
     print(VIEWMASTER_PREFIX_+ICON_URL_)
