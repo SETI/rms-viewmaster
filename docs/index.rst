@@ -20,7 +20,6 @@ Welcome to ``viewmaster`` documentation!
    pdsiterator
    viewmaster
    viewmaster_config
-   viewmaster_without_pause
 
 
 Indices and tables
