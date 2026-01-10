@@ -49,15 +49,6 @@ def create_logger():
     info_handler = pdslogger.file_handler(info_logfile, level=logging.INFO,
                                             rotation='midnight')
     LOGGER.add_handler(info_handler)
-    # Bypass the permission error when using read the docs to build the documents
-    # try:
-    #     info_handler = pdslogger.file_handler(info_logfile, level=logging.INFO,
-    #                                         rotation='midnight')
-    #     LOGGER.add_handler(info_handler)
-    # except PermissionError:
-    #     LOGGER.warn('Unable to open log file for link service; continuing without '
-    #                 'file handler', info_logfile)
-    #     pass
 
     # DEBUG_LOG_FILE = LOG_ROOT_PREFIX_ + 'link_debug.log'
     # debug_logfile = os.path.abspath(DEBUG_LOG_FILE)
