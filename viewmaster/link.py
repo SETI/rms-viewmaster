@@ -40,6 +40,16 @@ app = Flask(__name__)
 from .viewmaster_config import *
 
 def create_logger():
+    """Create and configure a logger for the Link service.
+
+    Sets up a PdsLogger instance with INFO level logging to a file with
+    midnight rotation. The logger name is derived from the Viewmaster logger
+    name by replacing 'viewmaster' with 'link'.
+
+    Returns:
+        pdslogger.PdsLogger: Configured logger instance.
+    """
+
     LOGNAME = LOGNAME.replace('viewmaster', 'link')
     LOGGER = pdslogger.PdsLogger(LOGNAME, limits={'info': -1, 'normal': -1},
                                         pid=True)
