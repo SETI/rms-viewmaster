@@ -51,28 +51,28 @@ def create_logger():
     """
 
     LOGNAME = LOGNAME.replace('viewmaster', 'link')
-    LOGGER = pdslogger.PdsLogger(LOGNAME, limits={'info': -1, 'normal': -1},
+    logger = pdslogger.PdsLogger(LOGNAME, limits={'info': -1, 'normal': -1},
                                         pid=True)
 
     LOG_FILE = LOG_ROOT_PREFIX_ + 'link.log'
     info_logfile = os.path.abspath(LOG_FILE)
     info_handler = pdslogger.file_handler(info_logfile, level=logging.INFO,
                                             rotation='midnight')
-    LOGGER.add_handler(info_handler)
+    logger.add_handler(info_handler)
 
     # DEBUG_LOG_FILE = LOG_ROOT_PREFIX_ + 'link_debug.log'
     # debug_logfile = os.path.abspath(DEBUG_LOG_FILE)
     # debug_handler = pdslogger.file_handler(debug_logfile, level=logging.DEBUG,
     #                                        rotation='midnight')
-    # LOGGER.add_handler(debug_handler)
+    # logger.add_handler(debug_handler)
 
     ################################################################################
 
-    LOGGER.blankline()
-    LOGGER.blankline()
-    LOGGER.info('Starting Link', info_logfile)
+    logger.blankline()
+    logger.blankline()
+    logger.info('Starting Link', info_logfile)
 
-    return LOGGER
+    return logger
 
 
 @app.route('/', defaults={'query_path': 'volumes'})
@@ -104,7 +104,7 @@ def link(query_path):
 
     """
 
-    LOGGER = create_logger()
+    logger = create_logger()
 
     original_query_path = query_path
     query_path = query_path.split('?')[0]
@@ -117,15 +117,15 @@ def link(query_path):
 
     isdir = len(parts) == 1 or parts[-1].isdigit()
     if isdir:
-        LOGGER.info('Redirect to Viewmaster', original_query_path)
+        logger.info('Redirect to Viewmaster', original_query_path)
         return redirect(VIEWMASTER_PREFIX_ + original_query_path)
 
     else:
-        LOGGER.info('Redirect to file', query_path)
+        logger.info('Redirect to file', query_path)
         pattern = DOCUMENT_ROOT_ + '/holdings*/' + query_path
         abspaths = glob.glob(pattern)
         if not abspaths:
-            LOGGER.error('File not found:', pattern)
+            logger.error('File not found:', pattern)
             abort(404)
 
         abspath = abspaths[0]
