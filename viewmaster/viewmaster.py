@@ -324,12 +324,6 @@ def get_page_cache(logger):
 
     return PAGE_CACHE
 
-# ################################################################################
-# # Load icons
-# ################################################################################
-
-# pdsviewable.load_icons(path=ICON_ROOT_, url=ICON_URL_, color=ICON_COLOR,
-#                        logger=LOGGER)
 
 ################################################################################
 # Function to reset the caches; should work when multiple threads all share a
@@ -363,7 +357,6 @@ def initialize_caches(reset=False):
                                  VIEWMASTER_MEMCACHE_PORT):
         PAGE_CACHE.clear()
 
-# initialize_caches(reset=False)
 
 ################################################################################
 ################################################################################
