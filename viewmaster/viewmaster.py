@@ -17,7 +17,6 @@ Configuration
   filesystem locations, caching, and URL prefixes.
 """
 
-from ast import Is
 from flask import Flask, flash, redirect, render_template, request, send_file
 from flask_wtf import FlaskForm
 from wtforms import StringField, HiddenField
@@ -78,6 +77,15 @@ if USE_SHELVES_ONLY:
 LOGGER = None
 
 def create_logger():
+    """Create and configure a logger for the Viewmaster service.
+
+    Sets up a PdsLogger instance with INFO and DEBUG level logging to files
+    with midnight rotation. If running in an interactive terminal, also adds
+    stdout handler. Configures Pds3File to use this logger.
+
+    Returns:
+        pdslogger.PdsLogger: Configured logger instance.
+    """
 
     global LOGGER
 
@@ -195,7 +203,14 @@ BOOT_TIME = psutil.boot_time()
 # XXX WHY DO WE ALLOW A LIST OF HOLDINGS PATHS INSTEAD OF A SINGLE PATH?
 # We get the holdings path from PDS3_HOLDINGS environment variable
 def get_holdings_paths():
-    """Return the list of holdings directories."""
+    """Return the list of holdings directories from environment variable.
+
+    Returns:
+        list[str]: List containing the holdings directory path.
+
+    Raises:
+        IOError: If the PDS3_HOLDINGS_DIR environment variable is not set.
+    """
 
     pds3_holdings_dir = os.getenv('PDS3_HOLDINGS_DIR')  # XXX PDS4
     if pds3_holdings_dir is not None:
@@ -208,7 +223,14 @@ def get_holdings_paths():
 # "pdsdata". We no longer use this approach.
 
 def get_holdings_paths_old_way():
-    """Return the list of holdings directories."""
+    """Return the list of holdings directories (deprecated method).
+
+    This method searches for attached drives in /Volumes with names beginning
+    with "pdsdata". This approach is no longer used.
+
+    Returns:
+        list[str]: List of holdings directory paths found.
+    """
 
     # Read the volume info dict
     DISKNAME_REGEX = re.compile(r'^pdsdata[0-9]*(|-\w+)$')
@@ -224,8 +246,18 @@ def get_holdings_paths_old_way():
     return holdings_abspaths
 
 def validate_holdings_paths(abspaths, logger):
-    """Make sure these are valid holdings directories. A missing directory
-    is logged as a warning, not an error."""
+    """Validate holdings directory paths and ensure required subdirectories exist.
+
+    Parameters:
+        abspaths (list[str]): List of absolute paths to validate.
+        logger: Logger instance for logging warnings and errors.
+
+    Returns:
+        list[str]: List of valid holdings directory paths.
+
+    Raises:
+        IOError: If no valid holdings paths remain after validation.
+    """
 
     valid_abspaths = []
     for abspath in abspaths:
@@ -280,6 +312,17 @@ def validate_holdings_paths(abspaths, logger):
 ################################################################################
 
 def get_holdings_path(logger):
+    """Get and validate the holdings path from environment variable.
+
+    Parameters:
+        logger: Logger instance for logging errors.
+
+    Returns:
+        list[str]: List containing a single validated holdings directory path.
+
+    Raises:
+        SystemExit: If the holdings path cannot be retrieved or validated.
+    """
 
     try:
         paths = get_holdings_paths()
@@ -295,6 +338,18 @@ def get_holdings_path(logger):
 
 
 def get_page_cache(logger):
+    """Initialize and return the page cache instance.
+
+    Sets up either a MemcachedCache or DictionaryCache based on configuration.
+    Falls back to DictionaryCache if Memcache connection fails.
+
+    Parameters:
+        logger: Logger instance for logging cache setup information.
+
+    Returns:
+        pdscache.Cache|None: Cache instance if PAGE_CACHING is enabled,
+            otherwise None.
+    """
 
     PAGE_CACHE = None
 
@@ -476,6 +531,7 @@ def get_prev_next_navigation(query_pdsfile, logger):
     Parameters:
         query_pdsfile (Pds3File): PdsFile instance (a file or directory) around which to
             build navigation.
+        logger: Logger instance for logging operations.
 
     Returns:
         tuple[list[Pds3File], list[Pds3File]]: Two lists `(prev, next)` where
@@ -895,6 +951,7 @@ def get_directory_page(query_pdsfile, logger):
 
     Parameters:
         query_pdsfile (Pds3File): Directory to display.
+        logger: Logger instance for logging operations.
 
     Returns:
         dict: Page dictionary with groups, associations, documents, navigation,
@@ -973,6 +1030,7 @@ def directory_page_html(query_pdsfile, params, logger):
     Parameters:
         query_pdsfile (Pds3File): Directory to display.
         params (dict): Cleaned query parameters.
+        logger: Logger instance for logging operations.
 
     Returns:
         str|tuple: HTML string or a tuple `('REDIRECT_NEEDED', new_path)`.
@@ -1193,6 +1251,7 @@ def get_product_page_info(query_pdsfile, logger):
 
     Parameters:
         query_pdsfile (Pds3File): File (or index row) to display.
+        logger: Logger instance for logging operations.
 
     Returns:
         dict: Page dictionary ready for rendering a product.
@@ -1361,6 +1420,7 @@ def product_page_html(query_pdsfile, params, logger):
     Parameters:
         query_pdsfile (Pds3File): Product to display.
         params (dict): Cleaned query parameters.
+        logger: Logger instance for logging operations.
 
     Returns:
         str: Rendered HTML.
@@ -2275,6 +2335,9 @@ def fill_page_cache(logger):
     """Pre-render and cache top-level and large directory pages.
 
     Walks holdings to warm the page cache for faster subsequent access.
+
+    Parameters:
+        logger: Logger instance for logging operations.
 
     Returns:
         None
