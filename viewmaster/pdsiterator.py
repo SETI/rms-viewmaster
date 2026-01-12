@@ -412,8 +412,6 @@ class PdsFileIterator(object):
             StopIteration: If no adjacent parent directory is available.
         """
 
-        prev_logical_path = self.current_logical_path
-
         # Go to the next parent
         (parent_logical_path, parent_display_path, _) = self.dir_iterator.next()
 
