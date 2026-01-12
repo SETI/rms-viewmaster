@@ -453,7 +453,7 @@ class PdsGroup(object):
 
     def remove(self, pdsf):
         """Remove the PdsFile from this PdsGroup. Return True if the PdsFile
-        was removed, False if it is not a member.Remove a PdsFile from the group.
+        was removed, False if it is not a member.
 
         Parameters:
             pdsf: PdsFile to remove.
