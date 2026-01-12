@@ -421,6 +421,13 @@ class PdsFileIterator(object):
             except ValueError:
                 continue
             break
+        else:
+            # Neither Pds3File nor Pds4File could create the parent
+            raise ValueError(
+                f"Could not create parent PdsFile from logical path "
+                f"'{parent_logical_path}'. Neither pdsfile.Pds3File nor "
+                f"pdsfile.Pds4File.from_logical_path() succeeded."
+            )
 
         # Load the next set of siblings
         basenames = self.parent.sort_basenames(self.parent.childnames)
