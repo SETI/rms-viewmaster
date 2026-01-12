@@ -39,6 +39,9 @@ app = Flask(__name__)
 
 from .viewmaster_config import *
 
+# Module-level logger cache
+LOGGER = None
+
 def create_logger():
     """Create and configure a logger for the Link service.
 
@@ -78,6 +81,20 @@ def create_logger():
 
     return logger
 
+def get_or_create_logger():
+    """Get the cached logger instance, creating it if necessary.
+
+    This ensures the logger and its handlers are only created once, preventing
+    duplicate handlers from being added on subsequent requests.
+
+    Returns:
+        pdslogger.PdsLogger: The cached logger instance.
+    """
+    global LOGGER
+    if LOGGER is None:
+        LOGGER = create_logger()
+    return LOGGER
+
 
 @app.route('/', defaults={'query_path': 'volumes'})
 @app.route('/<path:query_path>')
@@ -108,7 +125,7 @@ def link(query_path):
 
     """
 
-    logger = create_logger()
+    logger = get_or_create_logger()
 
     original_query_path = query_path
     query_path = query_path.split('?')[0]
