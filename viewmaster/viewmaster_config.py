@@ -15,17 +15,17 @@ The module defines configuration variables that are imported by `viewmaster.py`:
 
 Configuration Variables:
     * ``VIEWMASTER_TESTING`` (bool): True if running from command line.
-    * ``LOCALHOST\_`` (str): Localhost URL prefix, typically '/'.
-    * ``VIEWMASTER_PREFIX\_`` (str): Full URL prefix for Viewmaster routes.
+    * ``LOCALHOST_`` (str): Localhost URL prefix, typically '/'.
+    * ``VIEWMASTER_PREFIX_`` (str): Full URL prefix for Viewmaster routes.
     * ``WEBSITE_HTTP_HOME`` (str): Base URL for the website.
     * ``LOGNAME`` (str): Logger name for pdslogger.
     * ``VIEWMASTER_MEMCACHE_PORT`` (str|int): Memcache socket path or 0 to disable.
     * ``PDSFILE_MEMCACHE_PORT`` (str|int): Memcache socket path for PdsFile cache or 0.
     * ``MAKE_SYMLINKS`` (bool): Whether to create symlinks for holdings directories.
-    * ``PAGE_CACHING`` (bool): Whether to enable page*level caching.
-    * ``WEBSITE_ROOT\_`` (str): Root directory for website files.
-    * ``DOCUMENT_ROOT\_`` (str): Root directory for document files.
-    * ``LOG_ROOT_PREFIX\_`` (str): Root directory prefix for log files.
+    * ``PAGE_CACHING`` (bool): Whether to enable page-level caching.
+    * ``WEBSITE_ROOT_`` (str): Root directory for website files.
+    * ``DOCUMENT_ROOT_`` (str): Root directory for document files.
+    * ``LOG_ROOT_PREFIX_`` (str): Root directory prefix for log files.
     * ``EXTRA_LOCAL_IP_ADDRESS_A_B_C`` (str|None): Additional local IP prefix for cache
       building, or None.
     * ``USE_SHELVES_ONLY`` (bool): Whether to use shelves-only mode for Pds3File.
