@@ -36,7 +36,7 @@ import socket
 import sys
 
 # Test for a command line run, python viewmaster/viewmaster.py
-VIEWMASTER_TESTING = 'viewmaster.py' in sys.argv[0]
+VIEWMASTER_TESTING = sys.argv[0].endswith('viewmaster.py')
 
 # For command-line testing and development
 if VIEWMASTER_TESTING:
