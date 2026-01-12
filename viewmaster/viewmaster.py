@@ -87,8 +87,6 @@ def create_logger():
         pdslogger.PdsLogger: Configured logger instance.
     """
 
-    global LOGGER
-
     try:
         logger = pdslogger.PdsLogger.get_logger(LOGNAME)
     except KeyError:
@@ -118,9 +116,22 @@ def create_logger():
     logger.blankline()
     logger.info('Starting Viewmaster', info_logfile)
 
-    if LOGGER is None:
-        LOGGER = logger
     return logger
+
+
+def get_or_create_logger():
+    """Get the cached logger instance, creating it if necessary.
+
+    This ensures the logger and its handlers are only created once, preventing
+    duplicate handlers from being added on subsequent requests.
+
+    Returns:
+        pdslogger.PdsLogger: The cached logger instance.
+    """
+    global LOGGER
+    if LOGGER is None:
+        LOGGER = create_logger()
+    return LOGGER
 
 
 ################################################################################
@@ -2494,7 +2505,7 @@ def trim_html(html):
 ################################################################################
 
 if __name__ == "__main__":
-    logger = create_logger()
+    logger = get_or_create_logger()
     pdsviewable.load_icons(path=ICON_ROOT_, url=ICON_URL_, color=ICON_COLOR,
                            logger=logger)
     initialize_caches(reset=False)
