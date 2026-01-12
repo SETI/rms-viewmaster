@@ -75,6 +75,8 @@ if USE_SHELVES_ONLY:
     Pds3File.use_shelves_only(True)
 
 LOGGER = None
+HOLDINGS_PATHS = None
+PAGE_CACHE = None
 
 def create_logger():
     """Create and configure a logger for the Viewmaster service.
@@ -335,6 +337,8 @@ def get_holdings_path(logger):
         SystemExit: If the holdings path cannot be retrieved or validated.
     """
 
+    global HOLDINGS_PATHS
+
     try:
         paths = get_holdings_paths()
         paths = validate_holdings_paths(paths, logger)
@@ -362,15 +366,16 @@ def get_page_cache(logger):
             otherwise None.
     """
 
-    PAGE_CACHE = None
+    global PAGE_CACHE
 
+    page_cache = None
     # Set up the page cache if requested
     if PAGE_CACHING:
         if VIEWMASTER_MEMCACHE_PORT:
             try:
                 logger.info('Connecting Viewmaster to Memcache [%s]' %
                             VIEWMASTER_MEMCACHE_PORT)
-                PAGE_CACHE = pdscache.MemcachedCache(VIEWMASTER_MEMCACHE_PORT,
+                page_cache = pdscache.MemcachedCache(VIEWMASTER_MEMCACHE_PORT,
                                                     lifetime=pdsfile.cache_lifetime,
                                                     logger=logger)
 
@@ -381,12 +386,15 @@ def get_page_cache(logger):
                 VIEWMASTER_MEMCACHE_PORT = 0
 
         if not VIEWMASTER_MEMCACHE_PORT:
-            PAGE_CACHE = pdscache.DictionaryCache(lifetime=pdsfile.cache_lifetime,
+            page_cache = pdscache.DictionaryCache(lifetime=pdsfile.cache_lifetime,
                                                 limit=10000, logger=logger)
             logger.info('Using DictionaryCache for page caching')
 
     else:
         logger.info('Page caching OFF')
+
+    if PAGE_CACHE is None:
+        PAGE_CACHE = page_cache
 
     return PAGE_CACHE
 
@@ -409,10 +417,7 @@ def initialize_caches(reset=False):
         None
     """
 
-    global LOGGER
-
-    HOLDINGS_PATHS = get_holdings_path(LOGGER)
-    PAGE_CACHE = get_page_cache(LOGGER)
+    global LOGGER, HOLDINGS_PATHS, PAGE_CACHE
 
     LOGGER.replace_root(HOLDINGS_PATHS)
     print(VIEWMASTER_PREFIX_+ICON_URL_)
@@ -2109,9 +2114,8 @@ def return_holdings_local(query_path):
         Response: File response with appropriate MIME type.
     """
 
-    global LOGGER
+    global LOGGER, HOLDINGS_PATHS
 
-    HOLDINGS_PATHS = get_holdings_path(LOGGER)
     file_path = f'{HOLDINGS_PATHS[0]}/{query_path}'
     mimetype, _ = mimetypes.guess_type(file_path)
     if mimetype:
@@ -2149,7 +2153,7 @@ def viewmaster(query_path):
         str|Response|tuple: HTML page, redirect, or 404 page.
     """
 
-    global LOGGER
+    global LOGGER, PAGE_CACHE
 
     # This can happen during testing
     if query_path.endswith('favicon.ico'): return ''
@@ -2162,8 +2166,6 @@ def viewmaster(query_path):
     query_path = query_parts[0]
     suffix = url_params(params)
     key = '#' + query_path + suffix
-
-    PAGE_CACHE = get_page_cache(LOGGER)
 
     # Return page from cache if available
     if PAGE_CACHE:
@@ -2508,6 +2510,10 @@ if __name__ == "__main__":
     logger = get_or_create_logger()
     pdsviewable.load_icons(path=ICON_ROOT_, url=ICON_URL_, color=ICON_COLOR,
                            logger=logger)
+
+    HOLDINGS_PATHS = get_holdings_path(logger)
+    PAGE_CACHE = get_page_cache(logger)
+
     initialize_caches(reset=False)
     app.run(host='0.0.0.0', port=8080, debug=True)
 
