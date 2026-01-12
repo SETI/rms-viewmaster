@@ -31,7 +31,6 @@ Configuration Variables:
     * ``USE_SHELVES_ONLY`` (bool): Whether to use shelves-only mode for Pds3File.
 """
 
-import os
 import platform
 import socket
 import sys
