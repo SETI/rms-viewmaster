@@ -50,9 +50,9 @@ def create_logger():
         pdslogger.PdsLogger: Configured logger instance.
     """
 
-    LOGNAME = LOGNAME.replace('viewmaster', 'link')
-    logger = pdslogger.PdsLogger(LOGNAME, limits={'info': -1, 'normal': -1},
-                                        pid=True)
+    link_logger_name = LOGNAME.replace('viewmaster', 'link')
+    logger = pdslogger.PdsLogger(link_logger_name, limits={'info': -1, 'normal': -1},
+                                 pid=True)
 
     LOG_FILE = LOG_ROOT_PREFIX_ + 'link.log'
     info_logfile = os.path.abspath(LOG_FILE)
