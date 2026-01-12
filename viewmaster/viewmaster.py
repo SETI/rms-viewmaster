@@ -280,7 +280,7 @@ def validate_holdings_paths(abspaths, logger):
             if os.path.exists(parent) and 'holdings' in os.listdir(parent):
                 break
 
-            logger.warn('Holdings not found, pausing', abspath)
+            logger.warning('Holdings not found, pausing', abspath)
             time.sleep((os.getpid() + iter) % 5. + 0.9 * random.random())
             iter += 1
 
@@ -300,7 +300,7 @@ def validate_holdings_paths(abspaths, logger):
             testpath = prefix_ + dirname
 
             if not os.path.exists(testpath):
-                logger.warn('Directory is missing, ignored', testpath)
+                logger.warning('Directory is missing, ignored', testpath)
                 continue
 
             if not os.path.isdir(testpath):
@@ -376,8 +376,8 @@ def get_page_cache(logger):
 
             # On failure, switch to DictionaryCache
             except pylibmc.Error as e:
-                logger.warn('Failed to connect Viewmaster to Memcache [%s]' %
-                            VIEWMASTER_MEMCACHE_PORT)
+                logger.warning('Failed to connect Viewmaster to Memcache [%s]' %
+                               VIEWMASTER_MEMCACHE_PORT)
                 VIEWMASTER_MEMCACHE_PORT = 0
 
         if not VIEWMASTER_MEMCACHE_PORT:
@@ -1347,8 +1347,8 @@ def get_product_page_info(query_pdsfile, logger):
     (page['prev'], page['next']) = get_prev_next_navigation(query_pdsfile, logger)
     elapsed = (datetime.datetime.now() - start_time).total_seconds()
     if elapsed > 10:
-        logger.warn('Neighbor navigation took %.1f sec' % elapsed,
-                    query_pdsfile.abspath)
+        logger.warning('Neighbor navigation took %.1f sec' % elapsed,
+                       query_pdsfile.abspath)
 
     parallels = get_parallels(query_pdsfile)
     page['parallels'] = parallels
@@ -2241,7 +2241,7 @@ def viewmaster(query_path):
         LOGGER.exception(e, original_query_path, stacktrace=stacktrace)
 
         # Log query failure
-        LOGGER.warn('File not found', original_query_path)
+        LOGGER.warning('File not found', original_query_path)
 
         # Log the referring page if available
         http_referrer = os.environ.get('HTTP_REFERER','')
@@ -2256,11 +2256,11 @@ def viewmaster(query_path):
                 LOGGER.info('Returning fancy index', url)
                 return redirect(url + '?viewmaster_referrer=' + http_referrer)
             except Exception:
-                LOGGER.warn('Fancy index unavailable; abort(404)')
+                LOGGER.warning('Fancy index unavailable; abort(404)')
                 pass
 
         # Return a 404 page but don't abort the process!
-        LOGGER.warn('ABORT 404')
+        LOGGER.warning('ABORT 404')
         return render_template('error.html', query_parts=query_parts), 404
 
     finally:
