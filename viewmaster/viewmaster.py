@@ -339,7 +339,7 @@ def get_holdings_path(logger):
         paths = get_holdings_paths()
         paths = validate_holdings_paths(paths, logger)
     except Exception as e:
-        logger.exception(e)
+        logger.exception('Failed to get or validate holdings path')
         sys.exit(1)
 
     assert len(paths) == 1
@@ -375,7 +375,7 @@ def get_page_cache(logger):
                                                     logger=logger)
 
             # On failure, switch to DictionaryCache
-            except pylibmc.Error as e:
+            except pylibmc.Error:
                 logger.warning('Failed to connect Viewmaster to Memcache [%s]' %
                                VIEWMASTER_MEMCACHE_PORT)
                 VIEWMASTER_MEMCACHE_PORT = 0
