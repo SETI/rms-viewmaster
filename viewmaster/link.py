@@ -56,9 +56,13 @@ def create_logger():
 
     LOG_FILE = LOG_ROOT_PREFIX_ + 'link.log'
     info_logfile = os.path.abspath(LOG_FILE)
-    info_handler = pdslogger.file_handler(info_logfile, level=logging.INFO,
-                                            rotation='midnight')
-    logger.add_handler(info_handler)
+
+    try:
+        info_handler = pdslogger.file_handler(info_logfile, level=logging.INFO,
+                                              rotation='midnight')
+        logger.add_handler(info_handler)
+    except (OSError, IOError) as e:
+        logger.warning(f'Could not open log file {info_logfile}: {e}')
 
     # DEBUG_LOG_FILE = LOG_ROOT_PREFIX_ + 'link_debug.log'
     # debug_logfile = os.path.abspath(DEBUG_LOG_FILE)
