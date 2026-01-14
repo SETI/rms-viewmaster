@@ -77,7 +77,21 @@ LOCAL_IP_ADDRESS_A_B_C = LOCAL_IP_ADDRESS.rpartition('.')[0] + '.'
 #     LOG_ROOT_PREFIX_ = '/Library/WebServer/Logs/webapps/'
 ################################################################################
 
-from .viewmaster_config import *
+# from .viewmaster_config import *
+from .viewmaster_config import (
+    DOCUMENT_ROOT_,
+    EXTRA_LOCAL_IP_ADDRESS_A_B_C,
+    LOCALHOST_,
+    LOGNAME,
+    LOG_ROOT_PREFIX_,
+    PAGE_CACHING,
+    PDSFILE_MEMCACHE_PORT,
+    USE_SHELVES_ONLY,
+    VIEWMASTER_MEMCACHE_PORT,
+    VIEWMASTER_PREFIX_,
+    WEBSITE_HTTP_HOME,
+)
+
 if USE_SHELVES_ONLY:
     Pds3File.use_shelves_only(True)
 
