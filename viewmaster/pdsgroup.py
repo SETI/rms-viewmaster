@@ -541,7 +541,7 @@ class PdsGroup(object):
         Returns:
             list: All members.
         """
-        return [r for r in self.rows]
+        return list(self.rows)
 
     def iterator_for_hidden(self):
         """List of the hidden rows of this PdsGroup.
