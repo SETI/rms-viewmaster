@@ -17,7 +17,14 @@ Configuration
   filesystem locations, caching, and URL prefixes.
 """
 
-from flask import Flask, flash, redirect, render_template, request, send_file
+from flask import (
+    Flask,
+    flash,
+    redirect,
+    render_template,
+    request, send_file,
+    send_from_directory
+)
 from flask_wtf import FlaskForm
 from wtforms import StringField, HiddenField
 import wtforms
@@ -2125,14 +2132,11 @@ def return_holdings_local(query_path):
         Response: File response with appropriate MIME type.
     """
 
-    global LOGGER, HOLDINGS_PATHS
+    global HOLDINGS_PATHS
 
-    file_path = f'{HOLDINGS_PATHS[0]}/{query_path}'
-    mimetype, _ = mimetypes.guess_type(file_path)
-    if mimetype:
-        return send_file(file_path, mimetype=mimetype)
-    else:
-        return send_file(file_path)
+    root_dir = HOLDINGS_PATHS[0]
+    mimetype, _ = mimetypes.guess_type(query_path)
+    return send_from_directory(root_dir, query_path, mimetype=mimetype)
 
 @app.route('/feedback/<path:query_path>')
 def return_feedback(query_path):
