@@ -70,7 +70,7 @@ def create_logger():
         info_handler = pdslogger.file_handler(info_logfile, level=logging.INFO,
                                               rotation='midnight')
         logger.add_handler(info_handler)
-    except (OSError, IOError) as e:
+    except OSError as e:
         logger.warning(f'Could not open log file {info_logfile}: {e}')
 
     # DEBUG_LOG_FILE = LOG_ROOT_PREFIX_ + 'link_debug.log'
