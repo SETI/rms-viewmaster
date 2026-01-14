@@ -37,7 +37,13 @@ app = Flask(__name__)
 #     LOG_ROOT_PREFIX_ = '/Library/WebServer/Logs/webapps/'
 ################################################################################
 
-from .viewmaster_config import *
+from .viewmaster_config import (
+    LOGNAME,
+    LOG_ROOT_PREFIX_,
+    VIEWMASTER_PREFIX_,
+    DOCUMENT_ROOT_,
+    WEBSITE_HTTP_HOME
+)
 
 # Module-level logger cache
 LOGGER = None
