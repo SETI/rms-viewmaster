@@ -53,7 +53,7 @@ class PdsGroup(object):
                                     # it is derived when self.append is first
                                     # called. None means this is part of a
                                     # merged directory.
-        self.anchor = None
+        self.anchor = anchor
         self.rows = []
         self.hidden = set(hidden or [])
 
