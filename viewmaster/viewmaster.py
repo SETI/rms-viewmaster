@@ -381,21 +381,22 @@ def get_page_cache(logger):
     page_cache = None
     # Set up the page cache if requested
     if PAGE_CACHING:
-        if VIEWMASTER_MEMCACHE_PORT:
+        memcache_port = VIEWMASTER_MEMCACHE_PORT
+        if memcache_port:
             try:
                 logger.info('Connecting Viewmaster to Memcache [%s]' %
-                            VIEWMASTER_MEMCACHE_PORT)
-                page_cache = pdscache.MemcachedCache(VIEWMASTER_MEMCACHE_PORT,
+                            memcache_port)
+                page_cache = pdscache.MemcachedCache(memcache_port,
                                                     lifetime=pdsfile.cache_lifetime,
                                                     logger=logger)
 
             # On failure, switch to DictionaryCache
             except pylibmc.Error:
                 logger.warning('Failed to connect Viewmaster to Memcache [%s]' %
-                               VIEWMASTER_MEMCACHE_PORT)
-                VIEWMASTER_MEMCACHE_PORT = 0
+                               memcache_port)
+                memcache_port = None
 
-        if not VIEWMASTER_MEMCACHE_PORT:
+        if not memcache_port:
             page_cache = pdscache.DictionaryCache(lifetime=pdsfile.cache_lifetime,
                                                 limit=10000, logger=logger)
             logger.info('Using DictionaryCache for page caching')
