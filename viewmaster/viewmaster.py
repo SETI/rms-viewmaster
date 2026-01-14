@@ -253,14 +253,14 @@ def get_holdings_paths():
         list[str]: List containing the holdings directory path.
 
     Raises:
-        IOError: If the PDS3_HOLDINGS_DIR environment variable is not set.
+        OSError: If the PDS3_HOLDINGS_DIR environment variable is not set.
     """
 
     pds3_holdings_dir = os.getenv('PDS3_HOLDINGS_DIR')  # XXX PDS4
     if pds3_holdings_dir is not None:
         return [pds3_holdings_dir]
     else:
-        raise IOError("'PDS3_HOLDINGS_DIR' environment variable not set")
+        raise OSError("'PDS3_HOLDINGS_DIR' environment variable not set")
 
 # This code is preserved just in case we ever need it again. It searches for
 # attached drives in the /Volumes directory that have names beginning with
@@ -300,7 +300,7 @@ def validate_holdings_paths(abspaths, logger):
         list[str]: List of valid holdings directory paths.
 
     Raises:
-        IOError: If no valid holdings paths remain after validation.
+        OSError: If no valid holdings paths remain after validation.
     """
 
     valid_abspaths = []
@@ -343,7 +343,7 @@ def validate_holdings_paths(abspaths, logger):
         valid_abspaths.append(abspath)
 
     if not valid_abspaths:
-        raise IOError('Holdings list is empty')
+        raise OSError('Holdings list is empty')
 
     return valid_abspaths
 
@@ -373,7 +373,7 @@ def get_holdings_path(logger):
     try:
         paths = get_holdings_paths()
         paths = validate_holdings_paths(paths, logger)
-    except Exception as e:
+    except Exception:
         logger.exception('Failed to get or validate holdings path')
         sys.exit(1)
 
@@ -487,7 +487,7 @@ def load_infopage_content(page_pdsfile, hrefs=True):
     try:
         with open(page_pdsfile.abspath, 'r') as f:
             lines = f.readlines()
-    except IOError:
+    except OSError:
         return ''
 
     # Strip carriage control and trailing whitespace
@@ -2225,7 +2225,7 @@ def viewmaster(query_path):
                                                    must_exist=must_exist)
 
         if not query_pdsfile.is_index_row and not query_pdsfile.exists:
-            raise IOError('Unidentified PdsFile failure')
+            raise OSError('Unidentified PdsFile failure')
 
         # If the URL has changed, redirect
         if query_pdsfile.logical_path != query_path:
@@ -2288,7 +2288,7 @@ def viewmaster(query_path):
                 return redirect(url + '?viewmaster_referrer=' + http_referrer)
             except Exception:
                 LOGGER.warning('Fancy index unavailable; abort(404)')
-                pass
+
 
         # Return a 404 page but don't abort the process!
         LOGGER.warning('ABORT 404')
