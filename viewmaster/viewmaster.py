@@ -98,19 +98,29 @@ def create_logger():
     LOG_FILE = LOG_ROOT_PREFIX_ + 'viewmaster.log'
     info_logfile = os.path.abspath(LOG_FILE)
 
-    if sys.stdin.isatty():
-        logger.add_handler(pdslogger.stdout_handler)
-    else:  # don't do this when testing in interactive mode
-        info_handler = pdslogger.file_handler(info_logfile, level=logging.INFO,
-                                            rotation='midnight')
-        logger.add_handler(info_handler)
+    has_handlers = bool(getattr(logger, "handlers", []))
+    if not has_handlers:
+        if sys.stdin.isatty():
+            logger.add_handler(pdslogger.stdout_handler)
+        else:
+            try:
+                info_handler = pdslogger.file_handler(
+                    info_logfile, level=logging.INFO, rotation='midnight'
+                )
+                logger.add_handler(info_handler)
+            except OSError as e:
+                logger.warning(f'Could not open log file {info_logfile}: {e}')
+
 
     DEBUG_LOG_FILE = LOG_ROOT_PREFIX_ + 'viewmaster_debug.log'
 
     debug_logfile = os.path.abspath(DEBUG_LOG_FILE)
-    debug_handler = pdslogger.file_handler(debug_logfile, level=logging.DEBUG,
-                                            rotation='midnight')
-    logger.add_handler(debug_handler)
+    try:
+        debug_handler = pdslogger.file_handler(debug_logfile, level=logging.DEBUG,
+                                               rotation='midnight')
+        logger.add_handler(debug_handler)
+    except OSError as e:
+        logger.warning(f'Could not open log file {debug_logfile}: {e}')
 
     Pds3File.set_logger(logger)              # Let PdsFile also log
 
