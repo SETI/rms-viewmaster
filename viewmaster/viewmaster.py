@@ -2385,6 +2385,8 @@ def fill_page_cache(logger):
         None
     """
 
+    global PAGE_CACHE
+
     # Process un-versioned (latest) volsets first, then versioned
     unversioned_volset_pdsfiles = []
     versioned_volset_pdsfiles = []
@@ -2430,8 +2432,6 @@ def fill_page_cache(logger):
                         continue
 
                     _ = viewmaster(volume_pdsf.logical_path + '/' + childname)
-
-    PAGE_CACHE = get_page_cache(logger)
 
     if PAGE_CACHE:
         PAGE_CACHE.flush()
