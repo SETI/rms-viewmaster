@@ -377,7 +377,8 @@ def get_holdings_path(logger):
         logger.exception('Failed to get or validate holdings path')
         sys.exit(1)
 
-    assert len(paths) == 1
+    if len(paths) != 1:
+        raise RuntimeError(f'Expected exactly one holdings path, got {len(paths)}')
     HOLDINGS_PATHS = paths
 
     return HOLDINGS_PATHS
