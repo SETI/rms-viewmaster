@@ -30,10 +30,10 @@ from wtforms import StringField, HiddenField
 import wtforms
 
 import os, sys
-import cgi
 import datetime
 import fnmatch
 import hashlib
+import html
 import logging
 import mimetypes
 import psutil
@@ -1103,7 +1103,7 @@ def directory_page_html(query_pdsfile, params, logger):
 
     # Handle a selection (currently not implemented)
     if params['selection']:
-        anchor_suffix = '#' + cgi.escape(params['selection'], quote=True)
+        anchor_suffix = '#' + html.escape(params['selection'], quote=True)
     else:
         anchor_suffix = ''
 
@@ -2036,7 +2036,7 @@ def url_params(params, selection=None):
     if params['preview'] != 'default':
         url_param_list.append('preview=' + params['preview'])
     if params['selection']:
-        selection_escaped = cgi.escape(params['selection'], quote=True)
+        selection_escaped = html.escape(params['selection'], quote=True)
         url_param_list.append('selection=' + selection_escaped)
     if params['filter'] != '':
         url_param_list.append('filter=' + params['filter_for_url'])
