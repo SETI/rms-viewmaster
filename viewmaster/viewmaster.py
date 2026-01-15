@@ -2333,7 +2333,7 @@ def build_cache():
         hasher.update(bytes(password, 'latin-1'))
         if hasher.hexdigest() == DIGEST:
             initialize_caches(reset=False)
-            fill_page_cache(LOGGER)
+            fill_page_cache()
             LOGGER.info('Viewmaster cache building completed')
             return 'Viewmaster cache building completed'
         else:
@@ -2361,7 +2361,7 @@ def build_local_cache():
         LOGGER.info('Viewmaster cache building initiated locally', ip_address)
         try:
             initialize_caches(reset=False)
-            fill_page_cache(LOGGER)
+            fill_page_cache()
             LOGGER.info('Viewmaster cache building completed')
             return 'Viewmaster cache building completed'
         except Exception as e:
@@ -2373,13 +2373,10 @@ def build_local_cache():
                      ip_address)
         return 'Viewmaster cache building FAILED'
 
-def fill_page_cache(logger):
+def fill_page_cache():
     """Pre-render and cache top-level and large directory pages.
 
     Walks holdings to warm the page cache for faster subsequent access.
-
-    Parameters:
-        logger: Logger instance for logging operations.
 
     Returns:
         None
