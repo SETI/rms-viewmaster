@@ -55,7 +55,8 @@ def wsgi_init(wsgi_path):
         os.environ['PATH'] =  insertion + old_os_path
 
     # Update site_packages
-    site_packages = os.path.join(venv, 'lib/python%s/site-packages' % sys.version[:4])
+    version_num = f'{sys.version_info[0]:d}.{sys.version_info[1]:d}'
+    site_packages = os.path.join(venv, f'lib/python{version_num}/site-packages')
     assert os.path.exists(site_packages), "Missing site_packages subdirectory: " + site_packages
     site.addsitedir(site_packages)
 
