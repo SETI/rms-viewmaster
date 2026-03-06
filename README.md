@@ -29,11 +29,20 @@ Environment Setup (first‑time only)
 
 3. Set the environment variable `PDS3_HOLDINGS_DIR` to the path of your PDS3 holdings.
 
-4. Create and set ownership for `/Library/WebServer` to avoid permission issues:
+4. Create the `/var/www/` (Linux) or `/Library/WebServer` (Mac) directory and set the ownership to avoid permission issues when creating logs (Note: log files are under these root directories):
+
+   For Linux:
+
+   ```bash
+   sudo mkdir /var/www/
+   sudo chown -R user /var/www/   # Replace "user" with your username
+   ```
+
+   For Mac:
 
    ```bash
    sudo mkdir /Library/WebServer
-   sudo chown -R user /Library/WebServer   # Replace "user" with your own username
+   sudo chown -R user /Library/WebServer   # Replace "user" with your username
    ```
 
 Running Locally
