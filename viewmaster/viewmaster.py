@@ -246,9 +246,9 @@ UNVIEWABLE_EXTENSIONS = set(['.zip', '.tar.gz', '.tar', '.tgz', '.jar'])
 BOOT_TIME = psutil.boot_time()
 
 # XXX WHY DO WE ALLOW A LIST OF HOLDINGS PATHS INSTEAD OF A SINGLE PATH?
-# We get the holdings path from PDS3_HOLDINGS_DIR environment variable
 def get_holdings_paths():
-    """Return the list of holdings directories from environment variable.
+    """Return the list of holdings directories from the "PDS3_HOLDINGS_DIR" environment
+    variable.
 
     Returns:
         list[str]: List containing the holdings directory path.
