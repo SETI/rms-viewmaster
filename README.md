@@ -39,6 +39,7 @@ Environment Setup (first‑time only)
 Running Locally
 
 1. Start the server at the root of the repo:
+
    ```bash
    python -m viewmaster.viewmaster
    ```
