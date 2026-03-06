@@ -63,8 +63,8 @@ def create_logger():
     logger = pdslogger.PdsLogger(link_logger_name, limits={'info': -1, 'normal': -1},
                                  pid=True)
 
-    LOG_FILE = LOG_ROOT_PREFIX_ + 'link.log'
-    info_logfile = os.path.abspath(LOG_FILE)
+    log_file = LOG_ROOT_PREFIX_ + 'link.log'
+    info_logfile = os.path.abspath(log_file)
 
     try:
         info_handler = pdslogger.file_handler(info_logfile, level=logging.INFO,
