@@ -49,6 +49,7 @@ class PdsGroupTable(object):
         Returns:
             str: Representation with first member path and total count.
         """
+
         first = None
         count = 0
         for group in self.groups:
@@ -71,6 +72,7 @@ class PdsGroupTable(object):
         Returns:
             PdsGroupTable: A new table with copied groups and metadata.
         """
+
         this = PdsGroupTable()
         this.parent_pdsf = self.parent_pdsf
         this.groups = [g.copy() for g in self.groups]
@@ -85,6 +87,7 @@ class PdsGroupTable(object):
         Returns:
             str: Parent logical path or empty string if unknown.
         """
+
         if self.parent_pdsf:
             return self.parent_pdsf.logical_path
         else:
@@ -97,6 +100,7 @@ class PdsGroupTable(object):
         Returns:
             list: List of PdsFile objects representing the parent hierarchy.
         """
+
         if self._levels_filled is None:
             levels = []
             pdsf = self.parent_pdsf
@@ -115,6 +119,7 @@ class PdsGroupTable(object):
         Returns:
             list: First member of the first group followed by parent hierarchy levels.
         """
+
         return [self.groups[0].rows[0]] + self.levels
 
     def iterator(self):
@@ -123,6 +128,7 @@ class PdsGroupTable(object):
         Returns:
             list: Groups with non-zero visible member count.
         """
+
         return [g for g in self.groups if len(g) > 0]
 
     def iterator_for_all(self):
@@ -131,6 +137,7 @@ class PdsGroupTable(object):
         Returns:
             list: All groups in the table.
         """
+
         return [g for g in self.groups]
 
     def iterator_for_hidden(self):
@@ -139,6 +146,7 @@ class PdsGroupTable(object):
         Returns:
             list: Groups with zero visible members.
         """
+
         return [g for g in self.groups if len(g) == 0]
 
     def pdsfile_iterator(self):
@@ -147,6 +155,7 @@ class PdsGroupTable(object):
         Returns:
             list: All visible PdsFiles across all groups.
         """
+
         pdsfiles = []
         for group in self.groups:
             pdsfiles += group.iterator()
@@ -159,6 +168,7 @@ class PdsGroupTable(object):
         Returns:
             list: All PdsFiles across all groups, visible and hidden.
         """
+
         pdsfiles = []
         for group in self.groups:
             pdsfiles += group.iterator_for_all()
@@ -171,6 +181,7 @@ class PdsGroupTable(object):
         Returns:
             list: All hidden PdsFiles across all groups.
         """
+
         pdsfiles = []
         for group in self.groups:
             pdsfiles += group.iterator_for_hidden()
@@ -183,6 +194,7 @@ class PdsGroupTable(object):
         Returns:
             int: Count of groups with at least one visible member.
         """
+
         return len(self.iterator())
 
     def insert_group(self, group, merge=True):
@@ -199,6 +211,7 @@ class PdsGroupTable(object):
         Returns:
             None
         """
+
         if len(group.rows) == 0: return
 
         # Matching parent
@@ -266,6 +279,7 @@ class PdsGroupTable(object):
         Returns:
             None
         """
+
         if type(things) in (list,tuple):
             for thing in things:
                 self.insert(thing)
@@ -366,6 +380,7 @@ class PdsGroupTable(object):
         Returns:
             bool: True if the file was found and hidden; False otherwise.
         """
+
         for group in self.groups:
             test = group.hide(pdsf)
             if test: return test
@@ -381,6 +396,7 @@ class PdsGroupTable(object):
         Returns:
             bool: True if the file was found and removed; False otherwise.
         """
+
         for group in self.groups:
             test = group.remove(pdsf)
             if test: return test
@@ -396,6 +412,7 @@ class PdsGroupTable(object):
         Returns:
             None
         """
+
         for pdsf in self.pdsfile_iterator():
             if not regex.match(pdsf.basename):
                 self.hide_pdsfile(pdsf)
@@ -410,6 +427,7 @@ class PdsGroupTable(object):
         Returns:
             list: Tables sorted by parent logical path (empty string first).
         """
+
         sort_paths = []
         table_dict = {}
         for table in tables:
@@ -511,6 +529,7 @@ class PdsGroupTable(object):
         Returns:
             PdsGroupTable: A new table containing only visible members.
         """
+
         new_table = self.copy()
 
         new_groups = []
