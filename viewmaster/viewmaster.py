@@ -161,6 +161,7 @@ def get_or_create_logger():
     Returns:
         pdslogger.PdsLogger: The cached logger instance.
     """
+
     global LOGGER
     if LOGGER is None:
         LOGGER = create_logger()
@@ -2074,6 +2075,7 @@ def pattern_validator(field):
     Returns:
         None
     """
+
     filter = field.data
     if filter is None: return
     filter = str(filter)
@@ -2093,6 +2095,7 @@ class FilterForm(FlaskForm):
         filter (StringField): Optional file name match expression.
         hidden (HiddenField): Hidden field carrying the current URL.
     """
+
     filter = StringField('File name filter', [pattern_validator])
     hidden = HiddenField('hidden')
 
@@ -2105,6 +2108,7 @@ def set_filter():
     Returns:
         werkzeug.wrappers.response.Response: Redirect response.
     """
+
     form = FilterForm()
     if not form.validate_on_submit():
         flash('Invalid match expression: <font face="Courier">' +
@@ -2134,6 +2138,7 @@ def return_icons_local(query_path):
     Returns:
         Response: File response with image/png mimetype.
     """
+
     return send_file(f'../icons/{query_path}', mimetype='image/png')
 
 @app.route('/holdings/<path:query_path>')
@@ -2163,6 +2168,7 @@ def return_feedback(query_path):
     Returns:
         Response: Redirect response to site feedback page.
     """
+
     return redirect(f'https://pds-rings.seti.org/feedback/{query_path}')
 
 ################################################################################
@@ -2511,6 +2517,7 @@ def trim_html(html):
     Returns:
         str: Trimmed HTML.
     """
+
     old_html_recs = html.split('\n')
     new_html_recs = []
     preformatted = False
