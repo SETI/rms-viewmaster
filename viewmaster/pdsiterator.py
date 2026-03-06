@@ -176,18 +176,6 @@ class PdsDirIterator(object):
 
         return self
 
-    def next(self):
-        """Python 2 compatibility wrapper for __next__.
-
-        Returns:
-            tuple: (logical_path, display_path, level)
-
-        Raises:
-            StopIteration: When iteration is complete.
-        """
-
-        return self.__next__()
-
     def __next__(self):
         """Return the next neighbor directory in the iteration.
 
@@ -357,18 +345,6 @@ class PdsFileIterator(object):
 
         return self
 
-    def next(self):
-        """Python 2 compatibility wrapper for __next__.
-
-        Returns:
-            tuple: (logical_path, display_path, level)
-
-        Raises:
-            StopIteration: When iteration is complete.
-        """
-
-        return self.__next__()
-
     def __next__(self):
         """Return the next file in the iteration, jumping to adjacent directories if needed.
 
@@ -419,7 +395,7 @@ class PdsFileIterator(object):
         """
 
         # Go to the next parent
-        (parent_logical_path, parent_display_path, _) = self.dir_iterator.next()
+        (parent_logical_path, parent_display_path, _) = self.dir_iterator.__next__()
 
         for class_name in [pdsfile.Pds3File, pdsfile.Pds4File]:
             try:
@@ -446,7 +422,7 @@ class PdsFileIterator(object):
         else:
             self.sibling_index = len(self.sibnames)
 
-        (logical_path, basename, _) = self.next()
+        (logical_path, basename, _) = self.__next__()
         return (logical_path, parent_display_path + '/' + basename, 1)
 
 ################################################################################
@@ -527,18 +503,6 @@ class PdsRowIterator(object):
         """
 
         return self
-
-    def next(self):
-        """Python 2 compatibility wrapper for __next__.
-
-        Returns:
-            tuple: (logical_path, display_path, level)
-
-        Raises:
-            StopIteration: When iteration is complete.
-        """
-
-        return self.__next__()
 
     def __next__(self):
         """Return the next sibling file in the iteration.
