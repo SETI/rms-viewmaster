@@ -128,7 +128,6 @@ def link(query_path):
     Raises:
         werkzeug.exceptions.NotFound:
             404 error if the file is not found in any holdings directory.
-
     """
 
     logger = get_or_create_logger()

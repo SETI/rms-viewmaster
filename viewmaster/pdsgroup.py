@@ -138,6 +138,7 @@ class PdsGroup(object):
         Returns:
             bool: True if at least one member is a directory.
         """
+
         if self._isdir_filled is None:
             self._isdir_filled = any([p.isdir for p in self.rows])
 
