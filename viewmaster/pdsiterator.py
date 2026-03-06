@@ -31,6 +31,7 @@ def dirs_only(parent_pdsfile, basename):
         bool: True if the child is a directory (or if parent is None);
             False otherwise.
     """
+
     if parent_pdsfile is None: return True
 
     child_pdsfile = parent_pdsfile.child(basename)
@@ -172,6 +173,7 @@ class PdsDirIterator(object):
         Returns:
             PdsDirIterator: The iterator instance.
         """
+
         return self
 
     def next(self):
@@ -183,6 +185,7 @@ class PdsDirIterator(object):
         Raises:
             StopIteration: When iteration is complete.
         """
+
         return self.__next__()
 
     def __next__(self):
@@ -329,6 +332,7 @@ class PdsFileIterator(object):
         Returns:
             list: Filtered list of basenames.
         """
+
         if self.pattern:
             basenames = [s for s in basenames
                          if fnmatch.fnmatch(s, self.pattern)]
@@ -350,6 +354,7 @@ class PdsFileIterator(object):
         Returns:
             PdsFileIterator: The iterator instance.
         """
+
         return self
 
     def next(self):
@@ -361,6 +366,7 @@ class PdsFileIterator(object):
         Raises:
             StopIteration: When iteration is complete.
         """
+
         return self.__next__()
 
     def __next__(self):
@@ -519,6 +525,7 @@ class PdsRowIterator(object):
         Returns:
             PdsRowIterator: The iterator instance.
         """
+
         return self
 
     def next(self):
@@ -530,6 +537,7 @@ class PdsRowIterator(object):
         Raises:
             StopIteration: When iteration is complete.
         """
+
         return self.__next__()
 
     def __next__(self):
