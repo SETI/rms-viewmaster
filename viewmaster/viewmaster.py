@@ -56,9 +56,6 @@ from .pdsgrouptable import PdsGroupTable
 
 pdsfile.DEFAULT_CACHING = 'dir'             # Cache all directories
 
-app = Flask(__name__)
-app.secret_key = "Cassini Grand Finale!"    # needed by flask_wtf
-
 LOCAL_IP_ADDRESS = socket.gethostbyname(socket.gethostname())
 LOCAL_IP_ADDRESS_A_B_C = LOCAL_IP_ADDRESS.rpartition('.')[0] + '.'
 
@@ -2101,6 +2098,21 @@ class FilterForm(FlaskForm):
 
 ################################################################################
 
+def create_app():
+    app = Flask(__name__)
+    app.secret_key = "Cassini Grand Finale!"    # needed by flask_wtf
+    init_once()          # <- runs when the process imports/creates the app
+
+    return app
+
+def init_once():
+    global LOGGER, HOLDINGS_PATHS, PAGE_CACHE
+    logger = get_or_create_logger()
+    HOLDINGS_PATHS = get_holdings_path(logger)
+    PAGE_CACHE = get_page_cache(logger)
+
+app = create_app()
+
 @app.route('/set_filter', methods=['POST'])
 def set_filter():
     """Handle filter submission and redirect to updated URL.
@@ -2541,12 +2553,9 @@ def trim_html(html):
 ################################################################################
 
 if __name__ == "__main__":
-    logger = get_or_create_logger()
+    init_once()
     pdsviewable.load_icons(path=ICON_ROOT_, url=ICON_URL_, color=ICON_COLOR,
-                           logger=logger)
-
-    HOLDINGS_PATHS = get_holdings_path(logger)
-    PAGE_CACHE = get_page_cache(logger)
+                           logger=LOGGER)
 
     initialize_caches(reset=False)
     app.run(host='0.0.0.0', port=8080, debug=True)

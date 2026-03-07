@@ -20,8 +20,6 @@ import glob
 import logging
 import pdslogger
 
-app = Flask(__name__)
-
 ################################################################################
 # Define...
 #     LOCALHOST_ = '/'
@@ -100,6 +98,17 @@ def get_or_create_logger():
     if LOGGER is None:
         LOGGER = create_logger()
     return LOGGER
+
+def create_app():
+    app = Flask(__name__)
+    init_once()          # <- runs when the process imports/creates the app
+    return app
+
+def init_once():
+    global LOGGER
+    LOGGER = get_or_create_logger()
+
+app = create_app()
 
 
 @app.route('/', defaults={'query_path': 'volumes'})
