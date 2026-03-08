@@ -20,7 +20,7 @@ import glob
 import logging
 import pdslogger
 
-link_bp = Blueprint('link', __name__,)
+link_bp = Blueprint('link', __name__)
 
 ################################################################################
 # Define...

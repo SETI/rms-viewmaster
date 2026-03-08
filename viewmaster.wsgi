@@ -1,1 +1,2 @@
-from viewmaster.viewmaster import app as application
+from viewmaster.viewmaster import create_app
+application = create_app()

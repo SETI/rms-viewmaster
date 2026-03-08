@@ -18,6 +18,7 @@ Configuration
 """
 
 from flask import (
+    Blueprint,
     Flask,
     flash,
     redirect,
@@ -2098,22 +2099,9 @@ class FilterForm(FlaskForm):
 
 ################################################################################
 
-def create_app():
-    app = Flask(__name__)
-    app.secret_key = "Cassini Grand Finale!"    # needed by flask_wtf
-    init_once()          # <- runs when the process imports/creates the app
+viewmaster_bp = Blueprint('viewmaster', __name__)
 
-    return app
-
-def init_once():
-    global LOGGER, HOLDINGS_PATHS, PAGE_CACHE
-    logger = get_or_create_logger()
-    HOLDINGS_PATHS = get_holdings_path(logger)
-    PAGE_CACHE = get_page_cache(logger)
-
-app = create_app()
-
-@app.route('/set_filter', methods=['POST'])
+@viewmaster_bp.route('/set_filter', methods=['POST'])
 def set_filter():
     """Handle filter submission and redirect to updated URL.
 
@@ -2140,7 +2128,7 @@ def set_filter():
 # they get to Viewmaster and serve the directly. They are included here so
 # that Viewmaster can be tested without an Apache server running.
 
-@app.route('/icons-local/<path:query_path>')
+@viewmaster_bp.route('/icons-local/<path:query_path>')
 def return_icons_local(query_path):
     """Serve local icon PNGs when running without Apache static routing.
 
@@ -2153,7 +2141,7 @@ def return_icons_local(query_path):
 
     return send_file(f'../icons/{query_path}', mimetype='image/png')
 
-@app.route('/holdings/<path:query_path>')
+@viewmaster_bp.route('/holdings/<path:query_path>')
 def return_holdings_local(query_path):
     """Serve holdings files directly when running locally.
 
@@ -2170,7 +2158,7 @@ def return_holdings_local(query_path):
     mimetype, _ = mimetypes.guess_type(query_path)
     return send_from_directory(root_dir, query_path, mimetype=mimetype)
 
-@app.route('/feedback/<path:query_path>')
+@viewmaster_bp.route('/feedback/<path:query_path>')
 def return_feedback(query_path):
     """Redirect to the external feedback page.
 
@@ -2187,8 +2175,8 @@ def return_feedback(query_path):
 ################################################################################
 ################################################################################
 
-@app.route('/', defaults={'query_path': ''})
-@app.route('/<path:query_path>')
+@viewmaster_bp.route('/', defaults={'query_path': ''})
+@viewmaster_bp.route('/<path:query_path>')
 def viewmaster(query_path):
     """Main route handler rendering directory or product pages.
 
@@ -2326,7 +2314,7 @@ SALT = b'41fc142aaf094d39'  # from random.org
 DIGEST = '448b293a2708e6a6a295daf7da35422803bfa6daf2a9db78d202ccd986b3542f'
 # n-----D
 
-@app.route('/--build-cache', methods=['POST','GET'])
+@viewmaster_bp.route('/--build-cache', methods=['POST','GET'])
 def build_cache():
     """Expand caches for commonly accessed pages.
 
@@ -2363,7 +2351,7 @@ def build_cache():
         LOGGER.exception(e, '--build-cache', stacktrace=True)
         return 'Viewmaster cache building FAILED'
 
-@app.route('/--build-local-cache', methods=['POST','GET'])
+@viewmaster_bp.route('/--build-local-cache', methods=['POST','GET'])
 def build_local_cache():
     """Build caches when initiated from a local network address.
 
@@ -2457,7 +2445,7 @@ def fill_page_cache():
 # tree.
 ################################################################################
 
-@app.route('/--reset-cache', methods=['POST','GET'])
+@viewmaster_bp.route('/--reset-cache', methods=['POST','GET'])
 def reset_cache():
     """Reset caches to an initial state.
 
@@ -2495,7 +2483,7 @@ def reset_cache():
 
 ################################################################################
 
-@app.route('/--hexdigest', methods=['POST','GET'])
+@viewmaster_bp.route('/--hexdigest', methods=['POST','GET'])
 def hexdigest():
     """Utility to compute and display the SHA-256 hexdigest of a password.
 
@@ -2550,10 +2538,24 @@ def trim_html(html):
 
     return '\n'.join(new_html_recs)
 
+def init_once():
+    global LOGGER, HOLDINGS_PATHS, PAGE_CACHE
+    logger = get_or_create_logger()
+    HOLDINGS_PATHS = get_holdings_path(logger)
+    PAGE_CACHE = get_page_cache(logger)
+
+def create_app():
+    app = Flask(__name__)
+    app.secret_key = "Cassini Grand Finale!"    # needed by flask_wtf
+    init_once()
+    app.register_blueprint(viewmaster_bp)
+
+    return app
+
 ################################################################################
 
 if __name__ == "__main__":
-    init_once()
+    app = create_app()
     pdsviewable.load_icons(path=ICON_ROOT_, url=ICON_URL_, color=ICON_COLOR,
                            logger=LOGGER)
 
