@@ -1,1 +1,2 @@
-from viewmaster.link import app as application
+from viewmaster.link import create_app
+application = create_app()

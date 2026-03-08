@@ -13,14 +13,14 @@ The service:
     * Uses glob patterns to locate files across multiple holdings symlinks
 """
 
-from flask import Flask, redirect, abort
+from flask import Blueprint, Flask, redirect, abort
 
 import os
 import glob
 import logging
 import pdslogger
 
-app = Flask(__name__)
+link_bp = Blueprint('link', __name__,)
 
 ################################################################################
 # Define...
@@ -102,8 +102,8 @@ def get_or_create_logger():
     return LOGGER
 
 
-@app.route('/', defaults={'query_path': 'volumes'})
-@app.route('/<path:query_path>')
+@link_bp.route('/', defaults={'query_path': 'volumes'})
+@link_bp.route('/<path:query_path>')
 def link(query_path):
     """Route handler that redirects requests to appropriate destinations.
 
@@ -157,5 +157,11 @@ def link(query_path):
         abspath = abspaths[0]
         parts = abspath.partition('/holdings')
         return redirect(WEBSITE_HTTP_HOME + parts[1] + parts[2])
+
+def create_app():
+    app = Flask(__name__)
+    app.register_blueprint(link_bp)
+
+    return app
 
 ################################################################################
