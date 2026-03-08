@@ -2539,12 +2539,39 @@ def trim_html(html):
     return '\n'.join(new_html_recs)
 
 def init_once():
+    """Initialize global module state for Viewmaster.
+
+    Sets up the logger, holdings paths, and page cache. This function should
+    be called once during application startup to ensure all global resources
+    are properly initialized before handling requests.
+
+    The function updates the global variables:
+        - LOGGER: Logger instance for Viewmaster operations
+        - HOLDINGS_PATHS: List of validated holdings directory paths
+        - PAGE_CACHE: Cache instance for page rendering (if enabled)
+
+    Returns:
+        None
+    """
+
     global LOGGER, HOLDINGS_PATHS, PAGE_CACHE
     logger = get_or_create_logger()
     HOLDINGS_PATHS = get_holdings_path(logger)
     PAGE_CACHE = get_page_cache(logger)
 
 def create_app():
+    """Create and configure the Flask application for Viewmaster.
+
+    Initializes a Flask app instance, sets the secret key required for Flask-WTF
+    forms, initializes global resources (logger, holdings paths, page cache),
+    and registers the viewmaster blueprint that handles all routing for PDS3
+    holdings browsing.
+
+    Returns:
+        Flask: Configured Flask application instance with the viewmaster
+            blueprint registered and all global resources initialized.
+    """
+
     app = Flask(__name__)
     app.secret_key = "Cassini Grand Finale!"    # needed by flask_wtf
     init_once()

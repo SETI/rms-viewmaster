@@ -159,6 +159,16 @@ def link(query_path):
         return redirect(WEBSITE_HTTP_HOME + parts[1] + parts[2])
 
 def create_app():
+    """Create and configure the Flask application for the Link service.
+
+    Initializes a Flask app instance and registers the link blueprint that
+    handles routing for PDS file and directory redirects.
+
+    Returns:
+        Flask: Configured Flask application instance with the link blueprint
+            registered.
+    """
+
     app = Flask(__name__)
     app.register_blueprint(link_bp)
 
