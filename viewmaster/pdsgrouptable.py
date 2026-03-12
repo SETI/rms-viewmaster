@@ -443,7 +443,7 @@ class PdsGroupTable(object):
         return [table_dict[k] for k in sort_paths]
 
     @staticmethod
-    def tables_from_pdsfiles(pdsfiles, exclusions=set(), hidden=set(),
+    def tables_from_pdsfiles(pdsfiles, exclusions=None, hidden=None,
                                        labels_after=None, dirs_first=None,
                                        dirs_last=None, info_first=None):
         """Create and organize PdsGroupTables from a list of PdsFiles.
@@ -463,6 +463,9 @@ class PdsGroupTable(object):
         Returns:
             list: Sorted list of PdsGroupTable objects.
         """
+
+        exclusions = exclusions or set()
+        hidden = hidden or set()
 
         # Exclusions list can be given as PdsFiles, logical paths, or abspaths
         new_exclusions = set()
