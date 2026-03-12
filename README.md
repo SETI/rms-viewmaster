@@ -249,14 +249,14 @@ Included from:
 
 # Summary
 
-  ---------------------------------------------------------------------------------
-  | Page Section          | Page Key               | Main Rules
-  |-----------------------| -----------------------|-------------------------------|
-  | Main file table       | `page['tables']`       |  `SORT_KEY`, `SPLIT_RULES`, `DESCRIPTION_AND_ICON`
-  |Related files          | `page['associations']` |  `ASSOCIATIONS`               |
-  |Documentation          | `page['documents']`    |  `associations_to_documents`  |
-  |Info section           | `page['info']`         |  `INFO_FILE_BASENAMES`        |
-  |Navigation bar         | ---                    |  `NEIGHBORS`, `SIBLINGS`      |
+
+  | Page Section     | Page Key               | Main Rules                                         |
+  |------------------|------------------------|----------------------------------------------------|
+  | Main file table  | `page['tables']`       | `SORT_KEY`, `SPLIT_RULES`, `DESCRIPTION_AND_ICON`  |
+  | Related files    | `page['associations']` | `ASSOCIATIONS`                                     |
+  | Documentation    | `page['documents']`    | `associations_to_documents`                        |
+  | Info section     | `page['info']`         | `INFO_FILE_BASENAMES`                              |
+  | Navigation bar   | ---                    | `NEIGHBORS`, `SIBLINGS`                            |
 
 
 # Contributing
