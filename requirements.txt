@@ -9,5 +9,4 @@ rms-pdslogger
 rms-pdstable
 rms-translator
 sphinx
-sphinxcontrib-napoleon
 sphinx-rtd-theme
