@@ -138,7 +138,7 @@ class PdsGroupTable(object):
             list: All groups in the table.
         """
 
-        return [g for g in self.groups]
+        return list(self.groups)
 
     def iterator_for_hidden(self):
         """Return groups where all members are hidden.
