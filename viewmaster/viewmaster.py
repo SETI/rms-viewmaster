@@ -96,6 +96,7 @@ if USE_SHELVES_ONLY:
 LOGGER = None
 HOLDINGS_PATHS = None
 PAGE_CACHE = None
+_INITIALIZED = False
 
 def create_logger():
     """Create and configure a logger for the Viewmaster service.
@@ -364,7 +365,7 @@ def get_holdings_path(logger):
         list[str]: List containing a single validated holdings directory path.
 
     Raises:
-        SystemExit: If the holdings path cannot be retrieved or validated.
+        Exception: If the holdings path cannot be retrieved or validated.
     """
 
     global HOLDINGS_PATHS
@@ -374,7 +375,7 @@ def get_holdings_path(logger):
         paths = validate_holdings_paths(paths, logger)
     except Exception:
         logger.exception('Failed to get or validate holdings path')
-        sys.exit(1)
+        raise
 
     if len(paths) != 1:
         raise RuntimeError(f'Expected exactly one holdings path, got {len(paths)}')
@@ -2541,9 +2542,10 @@ def trim_html(html):
 def init_once():
     """Initialize global module state for Viewmaster.
 
-    Sets up the logger, holdings paths, and page cache. This function should
-    be called once during application startup to ensure all global resources
-    are properly initialized before handling requests.
+    Sets up the logger, holdings paths, page cache, icons, and Pds3File
+    caches. This function should be called once during application startup
+    to ensure all global resources are properly initialized before handling
+    requests. Subsequent calls are no-ops (idempotent).
 
     The function updates the global variables:
         - LOGGER: Logger instance for Viewmaster operations
@@ -2554,18 +2556,25 @@ def init_once():
         None
     """
 
-    global LOGGER, HOLDINGS_PATHS, PAGE_CACHE
+    global LOGGER, HOLDINGS_PATHS, PAGE_CACHE, _INITIALIZED
+    if _INITIALIZED:
+        return
+
     logger = get_or_create_logger()
     HOLDINGS_PATHS = get_holdings_path(logger)
     PAGE_CACHE = get_page_cache(logger)
+    pdsviewable.load_icons(path=ICON_ROOT_, url=ICON_URL_, color=ICON_COLOR,
+                           logger=LOGGER)
+    initialize_caches(reset=False)
+    _INITIALIZED = True
 
 def create_app():
     """Create and configure the Flask application for Viewmaster.
 
     Initializes a Flask app instance, sets the secret key required for Flask-WTF
-    forms, initializes global resources (logger, holdings paths, page cache),
-    and registers the viewmaster blueprint that handles all routing for PDS3
-    holdings browsing.
+    forms, initializes global resources (logger, holdings paths, page cache,
+    icons, and Pds3File caches), and registers the viewmaster blueprint that
+    handles all routing for PDS3 holdings browsing.
 
     Returns:
         Flask: Configured Flask application instance with the viewmaster
@@ -2583,10 +2592,6 @@ def create_app():
 
 if __name__ == "__main__":
     app = create_app()
-    pdsviewable.load_icons(path=ICON_ROOT_, url=ICON_URL_, color=ICON_COLOR,
-                           logger=LOGGER)
-
-    initialize_caches(reset=False)
     app.run(host='0.0.0.0', port=8080, debug=True)
 
 ################################################################################
