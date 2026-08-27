@@ -22,21 +22,6 @@ import pdslogger
 
 link_bp = Blueprint('link', __name__)
 
-################################################################################
-# Define...
-#     LOCALHOST_ = '/'
-#     VIEWMASTER_PREFIX_ = LOCALHOST_ + 'viewmaster/'
-#     WEBSITE_HTTP_HOME = 'https://pds-rings.seti.org'
-#     LOGNAME = 'pds.viewmaster.server'
-#     VIEWMASTER_MEMCACHE_PORT = '/var/tmp/memcached.socket'
-#     PDSFILE_MEMCACHE_PORT = '/var/tmp/memcached.socket'
-#     MAKE_SYMLINKS = True
-#     PAGE_CACHING = False
-#     WEBSITE_ROOT_ = '/Library/WebServer/'
-#     DOCUMENT_ROOT_ = '/Library/WebServer/Documents/'
-#     LOG_ROOT_PREFIX_ = '/Library/WebServer/Logs/webapps/'
-################################################################################
-
 from .viewmaster_config import (
     LOGNAME,
     LOG_ROOT_PREFIX_,

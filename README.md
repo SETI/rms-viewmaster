@@ -1,8 +1,11 @@
 <!-- start-after-point -->
 
+<!-- Add badges once PyPI, GitHub Actions, and Codecov exist -->
+<!--
 | PyPI Release | Test Status | Code Coverage |
 |--------------|-------------|----------------|
 | [![PyPI version](https://badge.fury.io/py/rms-viewmaster.svg)](https://badge.fury.io/py/rms-viewmaster) | [![Build status](https://img.shields.io/github/actions/workflow/status/SETI/rms-viewmaster/run-app-tests.yml?branch=main)](https://github.com/SETI/rms-viewmaster/actions) | [![Code coverage](https://img.shields.io/codecov/c/github/SETI/rms-viewmaster/main?logo=codecov)](https://codecov.io/gh/SETI/rms-viewmaster) |
+-->
 
 # Introduction
 
@@ -57,6 +60,8 @@ Running Locally
 
    <http://127.0.0.1:8080/>
    *(This corresponds to `VIEWMASTER_PREFIX_` in `viewmaster_config.py`.)*
+
+   The server binds to `127.0.0.1:8080` by default. Override with `VIEWMASTER_HOST` and `VIEWMASTER_PORT` (for example `VIEWMASTER_HOST=0.0.0.0` to listen on all interfaces).
 
 # Viewmaster and `PdsFile` Rules Interface
 

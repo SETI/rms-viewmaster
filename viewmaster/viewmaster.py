@@ -11,6 +11,8 @@ render HTML.
 
 Environment
   - `PDS3_HOLDINGS_DIR`: Absolute path to the PDS3 holdings root.
+  - `VIEWMASTER_HOST`: Bind address for the local dev server (default `127.0.0.1`).
+  - `VIEWMASTER_PORT`: Bind port for the local dev server (default `8080`).
 
 Configuration
   Values are imported from `viewmaster_config.py` to configure logging,
@@ -60,22 +62,6 @@ pdsfile.DEFAULT_CACHING = 'dir'             # Cache all directories
 LOCAL_IP_ADDRESS = socket.gethostbyname(socket.gethostname())
 LOCAL_IP_ADDRESS_A_B_C = LOCAL_IP_ADDRESS.rpartition('.')[0] + '.'
 
-################################################################################
-# These are defined in viewmaster_config.py. Values shown here are examples.
-#     LOCALHOST_ = '/'
-#     VIEWMASTER_PREFIX_ = LOCALHOST_ + 'viewmaster/'
-#     WEBSITE_HTTP_HOME = 'https://pds-rings.seti.org'
-#     LOGNAME = 'pds.viewmaster.server'
-#     VIEWMASTER_MEMCACHE_PORT = '/var/tmp/memcached.socket'
-#     PDSFILE_MEMCACHE_PORT = '/var/tmp/memcached.socket'
-#     MAKE_SYMLINKS = True
-#     PAGE_CACHING = False
-#     WEBSITE_ROOT_ = '/Library/WebServer/'
-#     DOCUMENT_ROOT_ = '/Library/WebServer/Documents/'
-#     LOG_ROOT_PREFIX_ = '/Library/WebServer/Logs/webapps/'
-################################################################################
-
-# from .viewmaster_config import *
 from .viewmaster_config import (
     DOCUMENT_ROOT_,
     EXTRA_LOCAL_IP_ADDRESS_A_B_C,
@@ -453,7 +439,6 @@ def initialize_caches(reset=False):
     global LOGGER, HOLDINGS_PATHS, PAGE_CACHE
 
     LOGGER.replace_root(HOLDINGS_PATHS)
-    print(VIEWMASTER_PREFIX_+ICON_URL_)
     Pds3File.preload(HOLDINGS_PATHS, port=PDSFILE_MEMCACHE_PORT,
                      clear=reset, icon_url=ICON_URL_)
 
@@ -2592,6 +2577,8 @@ def create_app():
 
 if __name__ == "__main__":
     app = create_app()
-    app.run(host='0.0.0.0', port=8080, debug=True)
+    host = os.getenv('VIEWMASTER_HOST', '127.0.0.1')
+    port = int(os.getenv('VIEWMASTER_PORT', '8080'))
+    app.run(host=host, port=port, debug=False)
 
 ################################################################################

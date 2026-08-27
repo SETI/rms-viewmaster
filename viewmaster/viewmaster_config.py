@@ -8,9 +8,9 @@ configuration based on the platform (Linux vs macOS) and execution context.
 The module defines configuration variables that are imported by `viewmaster.py`:
     * URL prefixes and paths for localhost and web server
     * Memcache socket paths for page and PdsFile caching
-    * Filesystem paths for documents, logs, and website root
+    * Filesystem paths for documents and logs
     * Logging configuration names
-    * Caching and symlink creation flags
+    * Caching flags
     * Platform-specific IP address ranges
 
 Configuration Variables:
@@ -21,9 +21,7 @@ Configuration Variables:
     * ``LOGNAME`` (str): Logger name for pdslogger.
     * ``VIEWMASTER_MEMCACHE_PORT`` (str|int): Memcache socket path or 0 to disable.
     * ``PDSFILE_MEMCACHE_PORT`` (str|int): Memcache socket path for PdsFile cache or 0.
-    * ``MAKE_SYMLINKS`` (bool): Whether to create symlinks for holdings directories.
     * ``PAGE_CACHING`` (bool): Whether to enable page-level caching.
-    * ``WEBSITE_ROOT_`` (str): Root directory for website files.
     * ``DOCUMENT_ROOT_`` (str): Root directory for document files.
     * ``LOG_ROOT_PREFIX_`` (str): Root directory prefix for log files.
     * ``EXTRA_LOCAL_IP_ADDRESS_A_B_C`` (str|None): Additional local IP prefix for cache
@@ -46,7 +44,6 @@ if VIEWMASTER_TESTING:
     LOGNAME = 'pds.viewmaster.testing'
     VIEWMASTER_MEMCACHE_PORT = 0
     PDSFILE_MEMCACHE_PORT = 0
-    MAKE_SYMLINKS = False
     PAGE_CACHING = False
 # As deployed
 else:
@@ -54,13 +51,13 @@ else:
     VIEWMASTER_PREFIX_ = LOCALHOST_ + 'viewmaster/'
     WEBSITE_HTTP_HOME = 'https://pds-rings.seti.org'
     LOGNAME = 'pds.viewmaster.server'
-    MAKE_SYMLINKS = True
     PAGE_CACHING = False
 
 if platform.system() == 'Linux':
-    VIEWMASTER_MEMCACHE_PORT = '/var/run/memcached/memcached.socket'
-    PDSFILE_MEMCACHE_PORT = '/var/run/memcached/memcached.socket'
-    WEBSITE_ROOT_ = '/var/www/'
+    if not VIEWMASTER_TESTING:
+        VIEWMASTER_MEMCACHE_PORT = '/var/run/memcached/memcached.socket'
+        PDSFILE_MEMCACHE_PORT = '/var/run/memcached/memcached.socket'
+    # else: keep ports at 0 from testing block above
     DOCUMENT_ROOT_ = '/var/www/documents/'
     LOG_ROOT_PREFIX_ = '/var/www/logs/webapps/'
     EXTRA_LOCAL_IP_ADDRESS_A_B_C = '10.1.10.'
@@ -72,7 +69,6 @@ else:
         VIEWMASTER_MEMCACHE_PORT = '/var/tmp/memcached.socket'
         PDSFILE_MEMCACHE_PORT = '/var/tmp/memcached.socket'
 
-    WEBSITE_ROOT_ = '/Library/WebServer/'
     DOCUMENT_ROOT_ = '/Library/WebServer/Documents/'
     LOG_ROOT_PREFIX_ = '/Library/WebServer/Logs/webapps/'
     EXTRA_LOCAL_IP_ADDRESS_A_B_C = None
