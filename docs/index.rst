@@ -14,6 +14,7 @@ Welcome to ``viewmaster`` documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   deployment
    link
    pdsgroup
    pdsgrouptable

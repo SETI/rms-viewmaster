@@ -78,6 +78,55 @@ Running Locally
 
    Set `VIEWMASTER_SECRET_KEY` in production. Local command-line runs fall back to a built-in development key.
 
+# Deploying with Apache / WSGI
+
+Production deployment uses Apache with mod_wsgi. `create_app()` performs all startup (logger, holdings paths, page cache, icons, and Pds3File preload), so the WSGI files are two-line factories with no separate init script.
+
+WSGI entry points (at the repo root):
+
+- [`viewmaster.wsgi`](viewmaster.wsgi) — Viewmaster
+- [`link.wsgi`](link.wsgi) — Link redirect service
+
+Point `WSGIDaemonProcess` `python-home` at the virtualenv that has `requirements.txt` installed. That is how the daemon finds Python packages; there is no `wsgi_init.py` venv bootstrap.
+
+## Environment variables
+
+These must be in the **Apache process environment** (`os.environ`) so `create_app()` can read them at import time. `SetEnv` in a vhost only fills the WSGI request environ and is **not** sufficient.
+
+| Variable | Required | Notes |
+|----------|----------|--------|
+| `PDS3_HOLDINGS_DIR` | Yes | Absolute path to the PDS3 holdings directory (same layout as in Getting Started). |
+| `VIEWMASTER_SECRET_KEY` | Yes in production | Flask secret key. `create_app()` raises if this is unset unless `VIEWMASTER_TESTING` is enabled. |
+
+Do **not** set `VIEWMASTER_TESTING` in production (that switches on localhost URLs and disables memcache).
+
+Example for Debian/Ubuntu (`/etc/apache2/envvars`):
+
+```bash
+export PDS3_HOLDINGS_DIR=/var/www/documents/holdings
+export VIEWMASTER_SECRET_KEY=replace-me
+```
+
+On systemd-managed Apache (RHEL/CentOS/Fedora), use a drop-in with `Environment=` or `EnvironmentFile=` lines instead.
+
+## Example vhost
+
+A complete template is in [`examples/apache2/viewmaster.conf`](examples/apache2/viewmaster.conf). Replace `/path/to/venv` and `/path/to/rms-viewmaster`, then enable the site and `mod_wsgi`.
+
+```apache
+WSGIDaemonProcess viewmaster \
+    python-home=/path/to/venv \
+    python-path=/path/to/rms-viewmaster \
+    processes=2 \
+    threads=5 \
+    display-name=%{GROUP}
+
+WSGIScriptAlias /viewmaster /path/to/rms-viewmaster/viewmaster.wsgi \
+    process-group=viewmaster application-group=%{GLOBAL}
+```
+
+The `/viewmaster` mount matches the production URL prefix (`VIEWMASTER_PREFIX_` is `/viewmaster/`). `python-home` must be the venv created in Getting Started (or an equivalent production venv). The example vhost also defines a second daemon and `/link` alias for [`link.wsgi`](link.wsgi).
+
 # Viewmaster and `PdsFile` Rules Interface
 
 Viewmaster renders pages by building a `page` dictionary and passing it
@@ -285,8 +334,7 @@ Information on contributing to this package can be found in the
 [Contributing Guide](https://github.com/SETI/rms-viewmaster/blob/main/CONTRIBUTING.md).
 
 # Links
-<!-- Update the readthedocs link once the branch merged into main -->
-- [Documentation](https://rms-viewmaster.readthedocs.io/en/clean_up_viewmaster/)
+- [Documentation](https://rms-viewmaster.readthedocs.io/en/latest/)
 - [Repository](https://github.com/SETI/rms-viewmaster)
 - [Issue tracker](https://github.com/SETI/rms-viewmaster/issues)
 <!-- Add this once we make pip install working -->
