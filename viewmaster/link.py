@@ -9,14 +9,13 @@ The service:
     * Detects directories by checking if the basename has no extension or ends
       with a digit (version suffix)
     * Redirects directories to Viewmaster for proper rendering
-    * Redirects files to their actual location in the holdings directories
-    * Uses glob patterns to locate files across multiple holdings symlinks
+    * Redirects files to WEBSITE_HTTP_HOME/holdings/... after confirming the
+      file exists under PDS3_HOLDINGS_DIR
 """
 
 from flask import Blueprint, Flask, redirect, abort
 
 import os
-import glob
 import logging
 import pdslogger
 
@@ -26,7 +25,6 @@ from .viewmaster_config import (
     LOGNAME,
     LOG_ROOT_PREFIX_,
     VIEWMASTER_PREFIX_,
-    DOCUMENT_ROOT_,
     WEBSITE_HTTP_HOME
 )
 
@@ -96,7 +94,8 @@ def link(query_path):
     accordingly:
 
         * Directories are redirected to Viewmaster for proper rendering
-        * Files are redirected to their actual location in holdings
+        * Files are redirected to WEBSITE_HTTP_HOME/holdings/<query_path> if
+          the file exists under PDS3_HOLDINGS_DIR
 
     Directory detection is based on whether the basename has no extension or
     ends with a digit (version suffix like "_v1.0").
@@ -112,7 +111,8 @@ def link(query_path):
 
     Raises:
         werkzeug.exceptions.NotFound:
-            404 error if the file is not found in any holdings directory.
+            404 error if PDS3_HOLDINGS_DIR is unset or the file is not found
+            under that directory.
     """
 
     logger = get_or_create_logger()
@@ -121,8 +121,8 @@ def link(query_path):
     query_path = query_path.split('?')[0]
 
     # We recognize a file path as something with an extension, but ignore
-    # version suffixes like "_v1.0". This is way faster than a glob.glob call,
-    # and is consistent with anything our website would link to.
+    # version suffixes like "_v1.0". This is consistent with anything our
+    # website would link to.
     basename = os.path.basename(query_path)
     parts = basename.split('.')
 
@@ -133,15 +133,13 @@ def link(query_path):
 
     else:
         logger.info('Redirect to file', query_path)
-        pattern = DOCUMENT_ROOT_ + '/holdings*/' + query_path
-        abspaths = glob.glob(pattern)
-        if not abspaths:
-            logger.error('File not found:', pattern)
+        holdings_dir = os.getenv('PDS3_HOLDINGS_DIR', '')
+        abspath = os.path.join(holdings_dir, query_path)
+        if not holdings_dir or not os.path.isfile(abspath):
+            logger.error('File not found:', abspath)
             abort(404)
 
-        abspath = abspaths[0]
-        parts = abspath.partition('/holdings')
-        return redirect(WEBSITE_HTTP_HOME + parts[1] + parts[2])
+        return redirect(WEBSITE_HTTP_HOME + '/holdings/' + query_path)
 
 def create_app():
     """Create and configure the Flask application for the Link service.
