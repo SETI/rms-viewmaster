@@ -30,7 +30,16 @@ Environment Setup (first‑time only)
    pip install -r requirements.txt
    ```
 
-3. Set the environment variable `PDS3_HOLDINGS_DIR` to the path of your PDS3 holdings.
+3. Set the environment variable `PDS3_HOLDINGS_DIR` to the path of your PDS3 holdings directory.
+
+   After symlink resolution (`realpath`), this path **must** end with a directory named `holdings`. The parent of that directory must also contain sibling `shelves/` and `volinfo/` directories:
+
+   ```text
+   <prefix>/
+     holdings/    ← PDS3_HOLDINGS_DIR points here
+     shelves/
+     volinfo/
+   ```
 
 4. Create the `/var/www/` (Linux) or `/Library/WebServer` (Mac) directory and set the ownership to avoid permission issues when creating logs (Note: log files are under these root directories):
 

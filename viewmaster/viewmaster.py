@@ -10,7 +10,9 @@ around PDS3 files, and uses Jinja2 templates under `viewmaster/templates/` to
 render HTML.
 
 Environment
-  - `PDS3_HOLDINGS_DIR`: Absolute path to the PDS3 holdings root.
+  - `PDS3_HOLDINGS_DIR`: Absolute path to the PDS3 holdings directory.
+    After ``realpath`` resolution the path must end with a directory named
+    ``holdings``, with sibling ``shelves`` and ``volinfo`` directories.
   - `VIEWMASTER_HOST`: Bind address for the local dev server (default `127.0.0.1`).
   - `VIEWMASTER_PORT`: Bind port for the local dev server (default `8080`).
 
@@ -278,6 +280,10 @@ def get_holdings_paths_old_way():
 def validate_holdings_paths(abspaths, logger):
     """Validate holdings directory paths and ensure required subdirectories exist.
 
+    Each path is resolved with ``os.path.realpath`` and must end with a
+    directory named ``holdings``. The parent of that directory must also
+    contain sibling ``shelves`` and ``volinfo`` directories.
+
     Parameters:
         abspaths (list[str]): List of absolute paths to validate.
         logger: Logger instance for logging warnings and errors.
@@ -309,24 +315,22 @@ def validate_holdings_paths(abspaths, logger):
 
         if not os.path.exists(abspath):
             logger.fatal('Holdings not found', abspath)
+            continue
 
         if not abspath.endswith('/holdings'):
             logger.error('Not a holdings directory, ignored', abspath)
             continue
 
         prefix_ = abspath[:-len('holdings')]
+        all_present = True
         for dirname in ('holdings', 'shelves', 'volinfo'):
             testpath = prefix_ + dirname
-
-            if not os.path.exists(testpath):
-                logger.warning('Directory is missing, ignored', testpath)
-                continue
-
             if not os.path.isdir(testpath):
-                logger.error('Not a directory, ignored', testpath)
-                continue
-
-        valid_abspaths.append(abspath)
+                logger.warning('Directory is missing or not a directory', testpath)
+                all_present = False
+                break
+        if all_present:
+            valid_abspaths.append(abspath)
 
     if not valid_abspaths:
         raise OSError('Holdings list is empty')
