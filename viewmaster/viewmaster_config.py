@@ -1,8 +1,9 @@
 """Configuration module for Viewmaster web application.
 
 This module sets up environment-specific configuration for the Viewmaster Flask
-application. It detects whether Viewmaster is running in testing mode (command-line)
-or production mode, and sets appropriate paths, URLs, caching options, and logging
+application. It detects whether Viewmaster is running in testing mode
+(``VIEWMASTER_TESTING`` env var, or ``python -m viewmaster.viewmaster``) or
+production mode, and sets appropriate paths, URLs, caching options, and logging
 configuration based on the platform (Linux vs macOS) and execution context.
 
 The module defines configuration variables that are imported by `viewmaster.py`:
@@ -14,7 +15,11 @@ The module defines configuration variables that are imported by `viewmaster.py`:
     * Platform-specific IP address ranges
 
 Configuration Variables:
-    * ``VIEWMASTER_TESTING`` (bool): True if running from command line.
+    * ``VIEWMASTER_TESTING`` (bool): True in local-dev/testing mode. Set by
+      ``VIEWMASTER_TESTING=1`` (or ``true``/``yes``), with a fallback when
+      ``sys.argv[0]`` ends with ``viewmaster.py`` (covers
+      ``python -m viewmaster.viewmaster``). ``flask run``, gunicorn, and
+      pytest must set the env var.
     * ``LOCALHOST_`` (str): Localhost URL prefix, typically '/'.
     * ``VIEWMASTER_PREFIX_`` (str): Full URL prefix for Viewmaster routes.
     * ``WEBSITE_HTTP_HOME`` (str): Base URL for the website.
@@ -29,12 +34,18 @@ Configuration Variables:
     * ``USE_SHELVES_ONLY`` (bool): Whether to use shelves-only mode for Pds3File.
 """
 
+import os
 import platform
 import socket
 import sys
 
-# Test for a command line run, python viewmaster/viewmaster.py
-VIEWMASTER_TESTING = sys.argv[0].endswith('viewmaster.py')
+# Primary signal is VIEWMASTER_TESTING=1/true/yes. Fallback covers
+# `python -m viewmaster.viewmaster` (argv[0] ends with viewmaster.py).
+# flask run, gunicorn, and pytest must set the env var explicitly.
+VIEWMASTER_TESTING = (
+    os.getenv('VIEWMASTER_TESTING', '').lower() in ('1', 'true', 'yes')
+    or sys.argv[0].endswith('viewmaster.py')
+)
 
 # For command-line testing and development
 if VIEWMASTER_TESTING:

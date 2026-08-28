@@ -13,6 +13,12 @@ Environment
   - `PDS3_HOLDINGS_DIR`: Absolute path to the PDS3 holdings directory.
     After ``realpath`` resolution the path must end with a directory named
     ``holdings``, with sibling ``shelves`` and ``volinfo`` directories.
+  - `VIEWMASTER_TESTING`: Set to `1`, `true`, or `yes` to enable local-dev
+    config (localhost URLs, memcache disabled). Also inferred when
+    `sys.argv[0]` ends with `viewmaster.py`. `flask run`, gunicorn, and
+    pytest must set this explicitly.
+  - `VIEWMASTER_SECRET_KEY`: Flask secret key (required in production).
+    Local-dev/testing mode falls back to a built-in development key.
   - `VIEWMASTER_HOST`: Bind address for the local dev server (default `127.0.0.1`).
   - `VIEWMASTER_PORT`: Bind port for the local dev server (default `8080`).
 
@@ -75,6 +81,7 @@ from .viewmaster_config import (
     USE_SHELVES_ONLY,
     VIEWMASTER_MEMCACHE_PORT,
     VIEWMASTER_PREFIX_,
+    VIEWMASTER_TESTING,
     WEBSITE_HTTP_HOME,
 )
 
@@ -2565,13 +2572,28 @@ def create_app():
     icons, and Pds3File caches), and registers the viewmaster blueprint that
     handles all routing for PDS3 holdings browsing.
 
+    The secret key is taken from ``VIEWMASTER_SECRET_KEY``. In testing mode
+    (``VIEWMASTER_TESTING``) a built-in development key is used when the env
+    var is unset. In production the env var is required.
+
     Returns:
         Flask: Configured Flask application instance with the viewmaster
             blueprint registered and all global resources initialized.
+
+    Raises:
+        RuntimeError: If ``VIEWMASTER_SECRET_KEY`` is unset outside testing mode.
     """
 
     app = Flask(__name__)
-    app.secret_key = "Cassini Grand Finale!"    # needed by flask_wtf
+    secret_key = os.getenv('VIEWMASTER_SECRET_KEY')
+    if secret_key:
+        app.secret_key = secret_key
+    elif VIEWMASTER_TESTING:
+        app.secret_key = "Cassini Grand Finale!"    # needed by flask_wtf
+    else:
+        raise RuntimeError(
+            'VIEWMASTER_SECRET_KEY must be set unless VIEWMASTER_TESTING is enabled'
+        )
     init_once()
     app.register_blueprint(viewmaster_bp)
 

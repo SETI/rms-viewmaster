@@ -30,7 +30,9 @@ Environment Setup (first‑time only)
    pip install -r requirements.txt
    ```
 
-3. Set the environment variable `PDS3_HOLDINGS_DIR` to the path of your PDS3 holdings directory.
+3. Set required environment variables.
+
+   Set `PDS3_HOLDINGS_DIR` to the path of your PDS3 holdings directory.
 
    After symlink resolution (`realpath`), this path **must** end with a directory named `holdings`. The parent of that directory must also contain sibling `shelves/` and `volinfo/` directories:
 
@@ -71,6 +73,10 @@ Running Locally
    *(This corresponds to `VIEWMASTER_PREFIX_` in `viewmaster_config.py`.)*
 
    The server binds to `127.0.0.1:8080` by default. Override with `VIEWMASTER_HOST` and `VIEWMASTER_PORT` (for example `VIEWMASTER_HOST=0.0.0.0` to listen on all interfaces).
+
+   `python -m viewmaster.viewmaster` enables testing mode automatically (localhost URLs, memcache disabled). When running under `flask run`, gunicorn, or pytest, set `VIEWMASTER_TESTING=1` (also accepts `true` or `yes`) so the same local-dev config is used.
+
+   Set `VIEWMASTER_SECRET_KEY` in production. Local command-line runs fall back to a built-in development key.
 
 # Viewmaster and `PdsFile` Rules Interface
 
