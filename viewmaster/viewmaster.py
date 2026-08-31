@@ -13,14 +13,24 @@ Environment
   - `PDS3_HOLDINGS_DIR`: Absolute path to the PDS3 holdings directory.
     After ``realpath`` resolution the path must end with a directory named
     ``holdings``, with sibling ``shelves`` and ``volinfo`` directories.
+  - `PDS4_HOLDINGS_DIR`: Optional absolute path to the PDS4 holdings
+    directory. After ``realpath`` resolution the path must end with a
+    directory named ``pds4-holdings``. When set, ``Pds4File.preload`` is
+    called at startup.
   - `VIEWMASTER_TESTING`: Set to `1`, `true`, or `yes` to enable local-dev
     config (localhost URLs, memcache disabled). Also inferred when
-    `sys.argv[0]` ends with `viewmaster.py`. `flask run`, gunicorn, and
-    pytest must set this explicitly.
+    `sys.argv[0]` is the ``viewmaster`` CLI or ends with `viewmaster.py`.
+    `flask run`, gunicorn, and pytest must set this explicitly.
   - `VIEWMASTER_SECRET_KEY`: Flask secret key (required in production).
     Local-dev/testing mode falls back to a built-in development key.
   - `VIEWMASTER_HOST`: Bind address for the local dev server (default `127.0.0.1`).
   - `VIEWMASTER_PORT`: Bind port for the local dev server (default `8080`).
+  - `VIEWMASTER_LOG_DIR`: Directory for log files. In testing mode the
+    default is ``$XDG_STATE_HOME/viewmaster/`` or ``~/.local/state/viewmaster/``.
+  - `VIEWMASTER_DOCUMENT_ROOT`, `VIEWMASTER_WEBSITE_HTTP_HOME`,
+    `VIEWMASTER_URL_PREFIX`, `VIEWMASTER_MEMCACHE_PORT`,
+    `PDSFILE_MEMCACHE_PORT`, `VIEWMASTER_EXTRA_LOCAL_IP`: optional
+    overrides for production paths and URLs.
 
 Configuration
   Values are imported from `viewmaster_config.py` to configure logging,
@@ -48,7 +58,6 @@ import html
 import logging
 import mimetypes
 import psutil
-import pylibmc
 import random
 import re
 import socket
@@ -56,8 +65,13 @@ import time
 import urllib
 import zlib
 
+try:
+    import pylibmc
+except ImportError:
+    pylibmc = None
+
 import pdsfile
-from pdsfile import pdscache, Pds3File, pdsviewable
+from pdsfile import pdscache, Pds3File, Pds4File, pdsviewable
 from . import pdsiterator
 import pdslogger
 import pdstable
@@ -87,9 +101,11 @@ from .viewmaster_config import (
 
 if USE_SHELVES_ONLY:
     Pds3File.use_shelves_only(True)
+    Pds4File.use_shelves_only(True)
 
 LOGGER = None
 HOLDINGS_PATHS = None
+PDS4_HOLDINGS_PATHS = None
 PAGE_CACHE = None
 _INITIALIZED = False
 
@@ -138,6 +154,7 @@ def create_logger():
         logger.warning(f'Could not open log file {debug_logfile}: {e}')
 
     Pds3File.set_logger(logger)              # Let PdsFile also log
+    Pds4File.set_logger(logger)
 
     logger.blankline()
     logger.blankline()
@@ -241,21 +258,30 @@ BOOT_TIME = psutil.boot_time()
 
 # XXX WHY DO WE ALLOW A LIST OF HOLDINGS PATHS INSTEAD OF A SINGLE PATH?
 def get_holdings_paths():
-    """Return the list of holdings directories from the "PDS3_HOLDINGS_DIR" environment
-    variable.
+    """Return the list of PDS3 holdings directories from ``PDS3_HOLDINGS_DIR``.
 
     Returns:
-        list[str]: List containing the holdings directory path.
+        list[str]: List containing the PDS3 holdings directory path.
 
     Raises:
         OSError: If the PDS3_HOLDINGS_DIR environment variable is not set.
     """
 
-    pds3_holdings_dir = os.getenv('PDS3_HOLDINGS_DIR')  # XXX PDS4
+    pds3_holdings_dir = os.getenv('PDS3_HOLDINGS_DIR')
     if pds3_holdings_dir is not None:
         return [pds3_holdings_dir]
     else:
         raise OSError("'PDS3_HOLDINGS_DIR' environment variable not set")
+
+
+def get_pds4_holdings_path():
+    """Return the PDS4 holdings directory from ``PDS4_HOLDINGS_DIR``, or None.
+
+    Returns:
+        str|None: The ``PDS4_HOLDINGS_DIR`` value, or None if unset.
+    """
+
+    return os.getenv('PDS4_HOLDINGS_DIR')
 
 # This code is preserved just in case we ever need it again. It searches for
 # attached drives in the /Volumes directory that have names beginning with
@@ -345,6 +371,35 @@ def validate_holdings_paths(abspaths, logger):
     return valid_abspaths
 
 
+def validate_pds4_holdings_path(abspath, logger):
+    """Validate a PDS4 holdings directory path.
+
+    The path is resolved with ``os.path.realpath`` and must be a directory
+    named ``pds4-holdings``.
+
+    Parameters:
+        abspath (str): Absolute path to validate.
+        logger: Logger instance for logging warnings and errors.
+
+    Returns:
+        str: The validated absolute path.
+
+    Raises:
+        OSError: If the path is missing or is not named ``pds4-holdings``.
+    """
+
+    abspath = os.path.abspath(os.path.realpath(abspath.rstrip('/')))
+    if not os.path.isdir(abspath):
+        logger.fatal('PDS4 holdings not found', abspath)
+        raise OSError('PDS4 holdings not found: %s' % abspath)
+    if os.path.basename(abspath) != 'pds4-holdings':
+        logger.error('Not a pds4-holdings directory', abspath)
+        raise OSError(
+            'PDS4 holdings directory must be named pds4-holdings: %s' % abspath
+        )
+    return abspath
+
+
 ################################################################################
 ################################################################################
 # Begin executable code...
@@ -353,19 +408,20 @@ def validate_holdings_paths(abspaths, logger):
 ################################################################################
 
 def get_holdings_path(logger):
-    """Get and validate the holdings path from environment variable.
+    """Get and validate PDS3 and optional PDS4 holdings paths from the environment.
 
     Parameters:
         logger: Logger instance for logging errors.
 
     Returns:
-        list[str]: List containing a single validated holdings directory path.
+        list[str]: List containing a single validated PDS3 holdings directory path.
 
     Raises:
-        Exception: If the holdings path cannot be retrieved or validated.
+        Exception: If the PDS3 holdings path cannot be retrieved or validated,
+            or if ``PDS4_HOLDINGS_DIR`` is set but invalid.
     """
 
-    global HOLDINGS_PATHS
+    global HOLDINGS_PATHS, PDS4_HOLDINGS_PATHS
 
     try:
         paths = get_holdings_paths()
@@ -377,6 +433,16 @@ def get_holdings_path(logger):
     if len(paths) != 1:
         raise RuntimeError(f'Expected exactly one holdings path, got {len(paths)}')
     HOLDINGS_PATHS = paths
+
+    pds4_dir = get_pds4_holdings_path()
+    if pds4_dir:
+        try:
+            PDS4_HOLDINGS_PATHS = [validate_pds4_holdings_path(pds4_dir, logger)]
+        except Exception:
+            logger.exception('Failed to get or validate PDS4 holdings path')
+            raise
+    else:
+        PDS4_HOLDINGS_PATHS = []
 
     return HOLDINGS_PATHS
 
@@ -401,6 +467,12 @@ def get_page_cache(logger):
     # Set up the page cache if requested
     if PAGE_CACHING:
         memcache_port = VIEWMASTER_MEMCACHE_PORT
+        if memcache_port and pylibmc is None:
+            logger.warning(
+                'pylibmc is not installed; skipping Viewmaster Memcache. '
+                'Install extras [memcache] to enable it.'
+            )
+            memcache_port = None
         if memcache_port:
             try:
                 logger.info('Connecting Viewmaster to Memcache [%s]' %
@@ -410,7 +482,9 @@ def get_page_cache(logger):
                                                     logger=logger)
 
             # On failure, switch to DictionaryCache
-            except pylibmc.Error:
+            except Exception as exc:
+                if pylibmc is None or not isinstance(exc, pylibmc.Error):
+                    raise
                 logger.warning('Failed to connect Viewmaster to Memcache [%s]' %
                                memcache_port)
                 memcache_port = None
@@ -437,7 +511,8 @@ def get_page_cache(logger):
 def initialize_caches(reset=False):
     """Initialize the caches.
 
-    This preloads `Pds3File` holdings, prepares `Pds3File` caches and optionally clears
+    This preloads `Pds3File` holdings (and `Pds4File` when
+    ``PDS4_HOLDINGS_DIR`` is set), prepares caches and optionally clears
     the page cache when it differs from the PdsFile cache backend.
 
     Parameters:
@@ -447,11 +522,17 @@ def initialize_caches(reset=False):
         None
     """
 
-    global LOGGER, HOLDINGS_PATHS, PAGE_CACHE
+    global LOGGER, HOLDINGS_PATHS, PDS4_HOLDINGS_PATHS, PAGE_CACHE
 
-    LOGGER.replace_root(HOLDINGS_PATHS)
+    roots = list(HOLDINGS_PATHS or [])
+    if PDS4_HOLDINGS_PATHS:
+        roots.extend(PDS4_HOLDINGS_PATHS)
+    LOGGER.replace_root(roots)
     Pds3File.preload(HOLDINGS_PATHS, port=PDSFILE_MEMCACHE_PORT,
                      clear=reset, icon_url=ICON_URL_)
+    if PDS4_HOLDINGS_PATHS:
+        Pds4File.preload(PDS4_HOLDINGS_PATHS, port=PDSFILE_MEMCACHE_PORT,
+                         clear=reset, icon_url=ICON_URL_)
 
     if reset and PAGE_CACHE and (PDSFILE_MEMCACHE_PORT !=
                                  VIEWMASTER_MEMCACHE_PORT):
@@ -2166,7 +2247,7 @@ def return_feedback(query_path):
         Response: Redirect response to site feedback page.
     """
 
-    return redirect(f'https://pds-rings.seti.org/feedback/{query_path}')
+    return redirect(f'{WEBSITE_HTTP_HOME}/feedback/{query_path}')
 
 ################################################################################
 ################################################################################
@@ -2545,14 +2626,15 @@ def init_once():
 
     The function updates the global variables:
         - LOGGER: Logger instance for Viewmaster operations
-        - HOLDINGS_PATHS: List of validated holdings directory paths
+        - HOLDINGS_PATHS: List of validated PDS3 holdings directory paths
+        - PDS4_HOLDINGS_PATHS: List of validated PDS4 holdings paths (may be empty)
         - PAGE_CACHE: Cache instance for page rendering (if enabled)
 
     Returns:
         None
     """
 
-    global LOGGER, HOLDINGS_PATHS, PAGE_CACHE, _INITIALIZED
+    global LOGGER, HOLDINGS_PATHS, PDS4_HOLDINGS_PATHS, PAGE_CACHE, _INITIALIZED
     if _INITIALIZED:
         return
 
@@ -2599,12 +2681,25 @@ def create_app():
 
     return app
 
-################################################################################
 
-if __name__ == "__main__":
+def main():
+    """Run the Viewmaster local development server.
+
+    Bind address and port come from ``VIEWMASTER_HOST`` (default
+    ``127.0.0.1``) and ``VIEWMASTER_PORT`` (default ``8080``). Debug mode
+    is off. This is the ``viewmaster`` console-script entry point.
+    """
+
     app = create_app()
     host = os.getenv('VIEWMASTER_HOST', '127.0.0.1')
     port = int(os.getenv('VIEWMASTER_PORT', '8080'))
     app.run(host=host, port=port, debug=False)
+    return 0
+
+
+################################################################################
+
+if __name__ == "__main__":
+    sys.exit(main())
 
 ################################################################################

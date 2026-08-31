@@ -12,8 +12,9 @@ factories:
 * ``link.wsgi`` — Link redirect service
 
 Point ``WSGIDaemonProcess`` ``python-home`` at the virtualenv that has
-``requirements.txt`` installed. That replaces the old ``wsgi_init.py`` venv
-bootstrap.
+``requirements.txt`` installed (``pip install -r requirements.txt`` or
+``pip install .``). That replaces the old ``wsgi_init.py`` venv
+bootstrap. Memcached support is optional (``pip install '.[memcache]'``).
 
 A minimal vhost template:
 

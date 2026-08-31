@@ -28,7 +28,14 @@ Environment Setup (first‑time only)
    python -m venv myenv        # Replace "myenv" with your preferred name
    source myenv/bin/activate
    pip install -r requirements.txt
+   # or, for an editable install that also provides the `viewmaster` CLI:
+   pip install -e .
    ```
+
+   Optional extras:
+
+   - Tests and docs: `pip install -r requirements-dev.txt` (or `pip install -e '.[dev]'`). Sphinx 9 / myst-parser 5 need Python 3.12+.
+   - Memcached page caching: `pip install -e '.[memcache]'` (needs `libmemcached` headers, e.g. Debian/Ubuntu `libmemcached-dev`). `pylibmc` is **not** required for clone-and-run.
 
 3. Set required environment variables.
 
@@ -43,28 +50,20 @@ Environment Setup (first‑time only)
      volinfo/
    ```
 
-4. Create the `/var/www/` (Linux) or `/Library/WebServer` (Mac) directory and set the ownership to avoid permission issues when creating logs (Note: log files are under these root directories):
+   Optionally set `PDS4_HOLDINGS_DIR` to a directory named `pds4-holdings` (after `realpath`). When set, Viewmaster preloads that tree via `Pds4File` at startup.
 
-   For Linux:
-
-   ```bash
-   sudo mkdir /var/www/
-   sudo chown -R user /var/www/   # Replace "user" with your username
-   ```
-
-   For Mac:
-
-   ```bash
-   sudo mkdir /Library/WebServer
-   sudo chown -R user /Library/WebServer   # Replace "user" with your username
-   ```
+4. Logs in local-dev/testing mode are written under `$XDG_STATE_HOME/viewmaster/` (or `~/.local/state/viewmaster/` if `XDG_STATE_HOME` is unset). Override with `VIEWMASTER_LOG_DIR`. You do **not** need to create `/var/www` or `/Library/WebServer` for local development.
 
 Running Locally
 
 1. Start the server at the root of the repo:
 
    ```bash
+   viewmaster
+   # or, without an editable install:
    python -m viewmaster.viewmaster
+   # or:
+   python -m viewmaster
    ```
 
 2. Open your browser and go to:
@@ -74,20 +73,22 @@ Running Locally
 
    The server binds to `127.0.0.1:8080` by default. Override with `VIEWMASTER_HOST` and `VIEWMASTER_PORT` (for example `VIEWMASTER_HOST=0.0.0.0` to listen on all interfaces).
 
-   `python -m viewmaster.viewmaster` enables testing mode automatically (localhost URLs, memcache disabled). When running under `flask run`, gunicorn, or pytest, set `VIEWMASTER_TESTING=1` (also accepts `true` or `yes`) so the same local-dev config is used.
+   `python -m viewmaster.viewmaster` and the `viewmaster` CLI enable testing mode automatically (localhost URLs, memcache disabled, user-writable log dir). When running under `flask run`, gunicorn, or pytest, set `VIEWMASTER_TESTING=1` (also accepts `true` or `yes`) so the same local-dev config is used. Set `VIEWMASTER_TESTING=0` to force production config even for the CLI.
 
    Set `VIEWMASTER_SECRET_KEY` in production. Local command-line runs fall back to a built-in development key.
 
+   Production paths and URLs (`VIEWMASTER_DOCUMENT_ROOT`, `VIEWMASTER_LOG_DIR`, `VIEWMASTER_WEBSITE_HTTP_HOME`, `VIEWMASTER_URL_PREFIX`, `VIEWMASTER_MEMCACHE_PORT`, `PDSFILE_MEMCACHE_PORT`, `VIEWMASTER_EXTRA_LOCAL_IP`) can be overridden with environment variables; see `viewmaster/viewmaster_config.py`.
+
 # Deploying with Apache / WSGI
 
-Production deployment uses Apache with mod_wsgi. `create_app()` performs all startup (logger, holdings paths, page cache, icons, and Pds3File preload), so the WSGI files are two-line factories with no separate init script.
+Production deployment uses Apache with mod_wsgi. `create_app()` performs all startup (logger, holdings paths, page cache, icons, and Pds3File/Pds4File preload), so the WSGI files are two-line factories with no separate init script.
 
 WSGI entry points (at the repo root):
 
 - [`viewmaster.wsgi`](viewmaster.wsgi) — Viewmaster
 - [`link.wsgi`](link.wsgi) — Link redirect service
 
-Point `WSGIDaemonProcess` `python-home` at the virtualenv that has `requirements.txt` installed. That is how the daemon finds Python packages; there is no `wsgi_init.py` venv bootstrap.
+Point `WSGIDaemonProcess` `python-home` at the virtualenv that has `requirements.txt` installed (`pip install -r requirements.txt` or `pip install .`). Add `pip install '.[memcache]'` on the production host if page caching via memcached is enabled. That is how the daemon finds Python packages; there is no `wsgi_init.py` venv bootstrap.
 
 ## Environment variables
 
@@ -96,7 +97,9 @@ These must be in the **Apache process environment** (`os.environ`) so `create_ap
 | Variable | Required | Notes |
 |----------|----------|--------|
 | `PDS3_HOLDINGS_DIR` | Yes | Absolute path to the PDS3 holdings directory (same layout as in Getting Started). |
+| `PDS4_HOLDINGS_DIR` | No | Absolute path to a directory named `pds4-holdings`. When set, `Pds4File` is preloaded at startup. |
 | `VIEWMASTER_SECRET_KEY` | Yes in production | Flask secret key. `create_app()` raises if this is unset unless `VIEWMASTER_TESTING` is enabled. |
+| `VIEWMASTER_LOG_DIR` | No | Directory for log files (defaults to `/var/www/logs/webapps/` on Linux). |
 
 Do **not** set `VIEWMASTER_TESTING` in production (that switches on localhost URLs and disables memcache).
 
@@ -104,6 +107,7 @@ Example for Debian/Ubuntu (`/etc/apache2/envvars`):
 
 ```bash
 export PDS3_HOLDINGS_DIR=/var/www/documents/holdings
+# export PDS4_HOLDINGS_DIR=/var/www/documents/pds4-holdings
 export VIEWMASTER_SECRET_KEY=replace-me
 ```
 

@@ -65,6 +65,9 @@ db.sqlite3-journal
 instance/
 .webassets-cache
 
+# Local-dev log directory (VIEWMASTER_LOG_DIR=./logs)
+logs/
+
 # Scrapy stuff:
 .scrapy
 
