@@ -1,9 +1,9 @@
-flask
-flask_wtf
-psutil
-pylibmc
-pytest
-rms-pdsfile
-rms-pdslogger
-rms-pdstable
-rms-translator
+# Runtime dependencies, pinned for reproducible installs.
+# pylibmc is optional: pip install -e '.[memcache]' (requires libmemcached).
+flask==3.1.3
+Flask-WTF==1.3.0
+psutil==7.2.2
+rms-pdsfile==0.1.2
+rms-pdslogger==3.2.1
+rms-pdstable==1.0.3
+rms-translator==1.0.0
