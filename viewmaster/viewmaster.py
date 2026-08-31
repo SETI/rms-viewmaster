@@ -12,7 +12,7 @@ render HTML.
 Environment
   - `PDS3_HOLDINGS_DIR`: Absolute path to the PDS3 holdings directory.
     After ``realpath`` resolution the path must end with a directory named
-    ``holdings``, with sibling ``shelves`` and ``volinfo`` directories.
+    ``holdings``.
   - `PDS4_HOLDINGS_DIR`: Optional absolute path to the PDS4 holdings
     directory. After ``realpath`` resolution the path must end with a
     directory named ``pds4-holdings``. When set, ``Pds4File.preload`` is
@@ -311,11 +311,10 @@ def get_holdings_paths_old_way():
     return holdings_abspaths
 
 def validate_holdings_paths(abspaths, logger):
-    """Validate holdings directory paths and ensure required subdirectories exist.
+    """Validate holdings directory paths.
 
-    Each path is resolved with ``os.path.realpath`` and must end with a
-    directory named ``holdings``. The parent of that directory must also
-    contain sibling ``shelves`` and ``volinfo`` directories.
+    Each path is resolved with ``os.path.realpath`` and must be a directory
+    named ``holdings``.
 
     Parameters:
         abspaths (list[str]): List of absolute paths to validate.
@@ -355,15 +354,17 @@ def validate_holdings_paths(abspaths, logger):
             continue
 
         prefix_ = abspath[:-len('holdings')]
-        all_present = True
         for dirname in ('holdings', 'shelves', 'volinfo'):
             testpath = prefix_ + dirname
+            if not os.path.exists(testpath):
+                logger.warning('Directory is missing, ignored', testpath)
+                continue
+
             if not os.path.isdir(testpath):
-                logger.warning('Directory is missing or not a directory', testpath)
-                all_present = False
-                break
-        if all_present:
-            valid_abspaths.append(abspath)
+                logger.error('Not a directory, ignored', testpath)
+                continue
+
+        valid_abspaths.append(abspath)
 
     if not valid_abspaths:
         raise OSError('Holdings list is empty')

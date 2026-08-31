@@ -17,8 +17,6 @@ def _make_pds3_tree(tmp_path):
     prefix = tmp_path / 'pds3'
     prefix.mkdir()
     (prefix / 'holdings').mkdir()
-    (prefix / 'shelves').mkdir()
-    (prefix / 'volinfo').mkdir()
     return prefix / 'holdings'
 
 

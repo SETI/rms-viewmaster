@@ -41,14 +41,7 @@ Environment Setup (first‑time only)
 
    Set `PDS3_HOLDINGS_DIR` to the path of your PDS3 holdings directory.
 
-   After symlink resolution (`realpath`), this path **must** end with a directory named `holdings`. The parent of that directory must also contain sibling `shelves/` and `volinfo/` directories:
-
-   ```text
-   <prefix>/
-     holdings/    ← PDS3_HOLDINGS_DIR points here
-     shelves/
-     volinfo/
-   ```
+   After symlink resolution (`realpath`), this path **must** end with a directory named `holdings`.
 
    Optionally set `PDS4_HOLDINGS_DIR` to a directory named `pds4-holdings` (after `realpath`). When set, Viewmaster preloads that tree via `Pds4File` at startup.
 
